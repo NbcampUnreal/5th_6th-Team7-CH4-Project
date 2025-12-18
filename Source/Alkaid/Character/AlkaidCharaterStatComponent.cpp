@@ -2,6 +2,8 @@
 
 
 #include "Character/AlkaidCharaterStatComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
@@ -14,16 +16,55 @@ UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
 	MaxStamina = 100.0f;
 	Stamina = MaxStamina;
 	NomalSpeed = 500.0f;
+	CandleCount = 0.0f;
 }
 
 void UAlkaidCharaterStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);	
 
+	DOREPLIFETIME(UAlkaidCharaterStatComponent, Stamina);
+	DOREPLIFETIME(UAlkaidCharaterStatComponent, MaxStamina);
+	DOREPLIFETIME(UAlkaidCharaterStatComponent, NomalSpeed);
+}
+
+void UAlkaidCharaterStatComponent::AddStamina(float Amount)
+{
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		Stamina += Amount;
+	}
+}
+
+void UAlkaidCharaterStatComponent::SetStamina(float NewStamina)
+{
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		Stamina = NewStamina;
+	}
+}
+
+void UAlkaidCharaterStatComponent::SetMaxStamina(float NewMaxStamina)
+{
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		MaxStamina = NewMaxStamina;
+	}
+}
+
+void UAlkaidCharaterStatComponent::AddMaxStamina(float Amount)
+{
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		MaxStamina += Amount;
+	}
 }
 
 
 void UAlkaidCharaterStatComponent::StaminaUsing(float DeltaTime, float Damage)
 {
+	if (!GetOwner() || !GetOwner()->HasAuthority())
+		return;
 	Stamina = FMath::Clamp(Stamina - Damage * DeltaTime, 0.0f, MaxStamina);
 }
 
