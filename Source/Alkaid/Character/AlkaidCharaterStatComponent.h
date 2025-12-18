@@ -9,12 +9,12 @@
 #include "AlkaidCharaterStatComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ALKAID_API UAlkaidCharaterStatComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UAlkaidCharaterStatComponent();
 
@@ -27,28 +27,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Stamina")
 	float MaxStamina;
 
-	FORCEINLINE void AddStamina(float Amount) { Stamina = FMath::Clamp(Stamina + Amount, 0.0f, MaxStamina); }
-
-	FORCEINLINE void AddStaminaDelta(float DeltaTime, float Rate) { AddStamina(DeltaTime * Rate); }
+	void AddStamina(float Amount); //서버
 
 	FORCEINLINE float GetStamina() const { return Stamina; }
 
-	FORCEINLINE void SetStamina(float NewStamina) { Stamina = FMath::Clamp(NewStamina, 0.0f, MaxStamina); }
+	void SetStamina(float NewStamina); //서버
 
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
 
-	FORCEINLINE void SetMaxStamina(float NewMaxStamina) 
-	{
-		MaxStamina = FMath::Max(0.0f, NewMaxStamina);
-		Stamina = FMath::Clamp(Stamina, 0.0f, MaxStamina);
-	}
-
-	FORCEINLINE void AddMaxStamina(float Amount) 
-	{ 
-		SetMaxStamina(MaxStamina + Amount); 
-	}	
-
-	void StaminaUsing(float DeltaTime, float Damage);
+	void SetMaxStamina(float NewMaxStamina); //서버
+	
+	void AddMaxStamina(float Amount); //서버
+	
+	void StaminaUsing(float DeltaTime, float Damage);//서버
 
 	//speed
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Speed, Category = "AlkaidCharacter|Speed")
@@ -56,7 +47,7 @@ public:
 
 	FORCEINLINE float GetNomalSpeed() const { return NomalSpeed; }
 
-	FORCEINLINE void SetNomalSpeed(float NewNomalSpeed) 
+	FORCEINLINE void SetNomalSpeed(float NewNomalSpeed) //서버
 	{ 
 		NomalSpeed = NewNomalSpeed; 
 		if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
@@ -68,7 +59,12 @@ public:
 		}
 	}
 
-	FORCEINLINE void AddNomalSpeed(float Amount) { SetNomalSpeed(NomalSpeed + Amount); }
+	FORCEINLINE void AddNomalSpeed(float Amount) { SetNomalSpeed(NomalSpeed + Amount); }//서버
+
+	float CandleCount;
+
+	FORCEINLINE void AddCandleCount(float Amount) { CandleCount += Amount; }//서버	
+
 
 protected:
 	// Called when the game starts
