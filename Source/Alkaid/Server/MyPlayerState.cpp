@@ -1,32 +1,81 @@
 #include "Server/MyPlayerState.h"
 #include "Net/UnrealNetwork.h"
-#include "GameFramework/GameModeBase.h"
 #include "LobbyGameModeBase.h"
 
 AMyPlayerState::AMyPlayerState()
 {
 	bReplicates = true;
-	bIsReady = false;
+	bInRoom = false;
+	bReady = false;
+}
+
+void AMyPlayerState::ServerJoinRoom_Implementation()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (ALobbyGameModeBase* GM = GetWorld() ? GetWorld()->GetAuthGameMode<ALobbyGameModeBase>() : nullptr)
+	{
+		GM->JoinRoom(this);
+	}
+}
+
+void AMyPlayerState::ServerLeaderStart_Implementation()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (ALobbyGameModeBase* GM = GetWorld() ? GetWorld()->GetAuthGameMode<ALobbyGameModeBase>() : nullptr)
+	{
+		GM->LeaderStart(this);
+	}
+
+}
+
+void AMyPlayerState::ServerLeaveRoom_Implementation()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (ALobbyGameModeBase* GM = GetWorld() ? GetWorld()->GetAuthGameMode<ALobbyGameModeBase>() : nullptr)
+	{
+		GM->LeaveRoom(this);
+	}
+
 }
 
 void AMyPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	//Ready 상태 동기화.
-	DOREPLIFETIME(AMyPlayerState, bIsReady);
+
+	DOREPLIFETIME(AMyPlayerState, bInRoom);
+	DOREPLIFETIME(AMyPlayerState, bReady);
 }
 
 void AMyPlayerState::ServerSetReady_Implementation(bool bNewReady)
 {
+	if (!HasAuthority())
+	{
+		return;
+	}
+	
+	if (!bInRoom)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Not in Room : %s"), *GetPlayerName());
+		return;
+	}
 	UE_LOG(LogTemp, Warning, TEXT("ServerSetReady %s -> %s"), *GetPlayerName(), bNewReady ? TEXT("Ready") : TEXT("NotReady"));
 	//상태 갱신.
-	bIsReady = bNewReady;
-
-	if (AGameModeBase* GM = GetWorld()->GetAuthGameMode())
+	bReady = bNewReady;
+	
+	if (ALobbyGameModeBase* GM = GetWorld() ? GetWorld()->GetAuthGameMode<ALobbyGameModeBase>() : nullptr)
 	{
-		if (ALobbyGameModeBase* LobbyGM = Cast<ALobbyGameModeBase>(GM))
-		{
-			LobbyGM->CheckAllReady();
-		}
+		GM->CheckStartReady();
 	}
 }

@@ -1,67 +1,266 @@
 #include "Server/LobbyGameModeBase.h"
+#include "Server/AlkaidGameStateBase.h"
 #include "MyPlayerState.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
 
 ALobbyGameModeBase::ALobbyGameModeBase()
 {
-	MinPlayerCount = 2;
-	//로비에서 사용되는 PlayerState.
+	MinPlayers = 2;
 	PlayerStateClass = AMyPlayerState::StaticClass();
+	GameStateClass = AAlkaidGameStateBase::StaticClass();
+	bUseSeamlessTravel = true;
 }
 
-void ALobbyGameModeBase::CheckAllReady()
+void ALobbyGameModeBase::JoinRoom(AMyPlayerState* PS)
 {
 	if (!HasAuthority())
 	{
 		return;
 	}
+
+	AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>();
+	if (!GS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("JoinRoom: GS is null"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("JoinRoom 요청: %s (InRoom=%d, Ready=%d, State=%d)"),
+		*PS->GetPlayerName(), PS->bInRoom ? 1 : 0, PS->bReady ? 1 : 0, (int32)GS->RoomState);
+
+	if (GS->RoomState == ERoomState::Loading)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("JoinRoom 거부: RoomState=Loading"));
+		return;
+	}
+
+	if (PS->bInRoom)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("JoinRoom 무시: 이미 InRoom"));
+		return;
+	}
+
+	PS->bInRoom = true;
+	PS->bReady = false;
+
+	if (GS->RoomLeaderPS == nullptr)
+	{
+		GS->RoomLeaderPS = PS;
+		GS->RoomState = ERoomState::Match;
+		UE_LOG(LogTemp, Warning, TEXT("Leader 지정: %s"), *PS->GetPlayerName());
+	}
+	else if (GS->RoomState == ERoomState::Free)
+	{
+		GS->RoomState = ERoomState::Match;
+	}
+
+	UpdateRoomCounts();
+	CheckStartReady();
+	UE_LOG(LogTemp, Warning, TEXT("JoinRoom 완료: %s (RoomPlayers=%d, Ready=%d, StartReady=%d)"),
+		*PS->GetPlayerName(),
+		GS->RoomPlayerCount,
+		GS->RoomReadyCount,
+		GS->bStartReady ? 1 : 0);
+}
+
+void ALobbyGameModeBase::LeaveRoom(AMyPlayerState* PS)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>();
+	if (!GS)
+	{
+		return;
+	}
+
+	if (!PS->bInRoom)
+	{
+		return;
+	}
+
+	PS->bInRoom = false;
+	PS->bReady = false;
+
+	if (GS->RoomLeaderPS == PS)
+	{
+		GS->RoomLeaderPS = nullptr;
+	}
+
+	EnsureRoomLeader();
+	UpdateRoomCounts();
+	CheckStartReady();
+}
+
+void ALobbyGameModeBase::CheckStartReady()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+	
+	AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>();
+	if (!GS)
+	{
+		return;
+	}
+
+	int32 RoomPlayers = 0;
+	int32 ReadyPlayers = 0;
+	const bool bAllReady = IsAllReadyInRoom(RoomPlayers, ReadyPlayers);
+
+	const bool bCanStart = (GS->RoomState == ERoomState::Match) && (RoomPlayers >= MinPlayers) && bAllReady;
+
+	GS->bStartReady = bCanStart;
+	GS->RoomPlayerCount = RoomPlayers;
+	GS->RoomReadyCount = ReadyPlayers;
+}
+
+void ALobbyGameModeBase::LeaderStart(AMyPlayerState* RequestPS)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>();
+	if (!GS || !RequestPS)
+	{
+		return;
+	}
+
+	if (!IsRoomLeader(RequestPS))
+	{
+		return;
+	}
+
+	CheckStartReady();
+	if (!GS->bStartReady)
+	{
+		return;
+	}
+
+	TravelToPuzzle();
+}
+
+void ALobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	UpdateRoomCounts();
+	CheckStartReady();
+}
+
+void ALobbyGameModeBase::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+
+	EnsureRoomLeader();
+	UpdateRoomCounts();
+	CheckStartReady();
+}
+
+void ALobbyGameModeBase::EnsureRoomLeader()
+{
+	AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>();
+	if (!GS)
+	{
+		return;
+	}
+
+	if (GS->RoomLeaderPS)
+	{
+		if (const AMyPlayerState* Leader = Cast<AMyPlayerState>(GS->RoomLeaderPS))
+		{
+			if (Leader->bInRoom)
+			{
+				return;
+			}
+		}
+		GS->RoomLeaderPS = nullptr;
+	}
+
+	for (APlayerState* PS : GameState->PlayerArray)
+	{
+		if (AMyPlayerState* MyPS = Cast<AMyPlayerState>(PS))
+		{
+			if (MyPS->bInRoom)
+			{
+				GS->RoomLeaderPS = MyPS;
+				GS->RoomState = ERoomState::Match;
+				return;
+			}
+		}
+	}
+
+	GS->RoomState = ERoomState::Free;
+}
+void ALobbyGameModeBase::UpdateRoomCounts()
+{
+	if (AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>())
+	{
+		int32 RoomPlayers = 0;
+		int32 ReadyPlayers = 0;
+		IsAllReadyInRoom(RoomPlayers, ReadyPlayers);
+
+		GS->RoomPlayerCount = RoomPlayers;
+		GS->RoomReadyCount = ReadyPlayers;
+	}
+}
+
+bool ALobbyGameModeBase::IsAllReadyInRoom(int32& OutRoomPlayers, int32& OutReadyPlayers) const
+{
+	OutRoomPlayers = 0;
+	OutReadyPlayers = 0;
 
 	UWorld* World = GetWorld();
 	if (!World)
 	{
-		return;
+		return false;
 	}
-
-	int32 PlayerCount = 0;
-	int32 ReadyCount = 0;
-
-	//현재 접속한 플레이어들의 Ready 상태 확인.
+	
 	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
-		APlayerController* PC = It->Get();
-		if (!PC)
+		if (APlayerController* PC = It->Get())
 		{
-			continue;
-		}
-
-		if (AMyPlayerState* PS = PC->GetPlayerState<AMyPlayerState>())
-		{
-			PlayerCount++;
-			if (PS->bIsReady)
+			if (AMyPlayerState* PS = PC->GetPlayerState<AMyPlayerState>())
 			{
-				ReadyCount++;
+				if (!PS->bInRoom)
+				{
+					continue;
+				}
+				OutRoomPlayers++;
+				if (PS->bReady)
+				{
+					OutReadyPlayers++;
+				}
 			}
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("CheckAllReady Player = %d Ready = %d Min = %d"), PlayerCount, ReadyCount, MinPlayerCount);
-
-	//최소 인원 + 전원 Ready 상태이면 StartGame 호출.
-	if (PlayerCount >= MinPlayerCount && ReadyCount == PlayerCount)
-	{
-		StartGame();
-	}
+	return(OutRoomPlayers > 0 && OutReadyPlayers == OutRoomPlayers);
 }
 
-void ALobbyGameModeBase::StartGame()
+bool ALobbyGameModeBase::IsRoomLeader(const AMyPlayerState* PS) const
+{
+	const AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>();
+	return (GS && GS->RoomLeaderPS && PS && GS->RoomLeaderPS == PS);
+}
+
+void ALobbyGameModeBase::TravelToPuzzle()
 {
 	if (!HasAuthority())
 	{
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("StartGame All Ready -> TravelTo PuzzleMap"));
-	
-	bUseSeamlessTravel = true;
+	if (AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>())
+	{
+		GS->RoomState = ERoomState::Loading;
+		GS->bStartReady = false;
+	}
+
 	TravelTo(PuzzleMapPath);
 }
