@@ -17,6 +17,7 @@ UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
 	Stamina = MaxStamina;
 	NomalSpeed = 500.0f;
 	CandleCount = 0.0f;
+	CandleCooldownSeconds = 3.0f;
 }
 
 void UAlkaidCharaterStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -27,6 +28,7 @@ void UAlkaidCharaterStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, MaxStamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, NomalSpeed);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCount);
+	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCoolDownEndTime);
 }
 
 void UAlkaidCharaterStatComponent::AddStamina(float Amount)
@@ -122,8 +124,7 @@ void UAlkaidCharaterStatComponent::AddCandleCount(float Amount)
 {
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
-		//CandleCount += Amount;
-		//FMath::Clamp(CandleCount, 0.0f, MaxCandleCount);
+		CandleCount =  FMath::Clamp(CandleCount + Amount, 0.0f, MaxCandleCount);
 	}
 }
 
@@ -131,9 +132,32 @@ void UAlkaidCharaterStatComponent::SetCandleCount(float NewCandleCount)
 {
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
-		//CandleCount = NewCandleCount;
+		CandleCount = FMath::Clamp(NewCandleCount, 0.0f, MaxCandleCount);
 	}
 }
+
+bool UAlkaidCharaterStatComponent::IsCandleOnCooldown() const
+{
+	const UWorld* World = GetWorld();
+	return World && World->GetTimeSeconds() < CandleCoolDownEndTime;
+}
+
+float UAlkaidCharaterStatComponent::GetCandleCooldownRemainingTime() const
+{
+	const UWorld* World = GetWorld();
+	if(!World)
+		return 0.0f;
+	return FMath::Max(0.0f, CandleCoolDownEndTime - World->GetTimeSeconds());
+}
+
+void UAlkaidCharaterStatComponent::StartCandleCooldown()
+{
+	if(!GetOwner() || !GetOwner()->HasAuthority())
+		return;
+	CandleCoolDownEndTime = UGameplayStatics::GetTimeSeconds(GetWorld()) + CandleCooldownSeconds;
+}
+
+
 
 // Called when the game starts
 void UAlkaidCharaterStatComponent::BeginPlay()
@@ -156,6 +180,11 @@ void UAlkaidCharaterStatComponent::OnRep_Stamina()
 void UAlkaidCharaterStatComponent::OnRep_Speed()
 {
 	ApplySpeed();
+}
+
+void UAlkaidCharaterStatComponent::OnRep_CandleCoolDonwEndTime()
+{
+
 }
 
 

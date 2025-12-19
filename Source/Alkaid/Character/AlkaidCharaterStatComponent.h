@@ -31,19 +31,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Stamina")
 	float MaxStamina;
 
-	void AddStamina(float Amount); //서버
+	void AddStamina(float Amount); //server
 
 	FORCEINLINE float GetStamina() const { return Stamina; }
 
-	void SetStamina(float NewStamina); //서버
+	void SetStamina(float NewStamina); //server
 
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
 
-	void SetMaxStamina(float NewMaxStamina); //서버
+	void SetMaxStamina(float NewMaxStamina); //server
 	
-	void AddMaxStamina(float Amount); //서버
+	void AddMaxStamina(float Amount); //server
 	
-	void StaminaUsing(float DeltaTime, float Damage);//서버
+	void StaminaUsing(float DeltaTime, float Damage);//server
 
 	void ApplyStamina();
 
@@ -53,9 +53,9 @@ public:
 
 	FORCEINLINE float GetNomalSpeed() const { return NomalSpeed; }
 
-	void SetNomalSpeed(float NewNomalSpeed); //서버
+	void SetNomalSpeed(float NewNomalSpeed); //server
 	
-	void AddNomalSpeed(float Amount);//서버
+	void AddNomalSpeed(float Amount);//server
 
 	void ApplySpeed();
 
@@ -69,21 +69,36 @@ public:
 
 	FORCEINLINE float GetCandleCount() const { return CandleCount; }
 
-	void AddCandleCount(float Amount);//서버
+	void AddCandleCount(float Amount);//server
 
-	void SetCandleCount(float NewCandleCount);//서버
+	void SetCandleCount(float NewCandleCount);//server
+
+	//candle cooltime
+	UPROPERTY(ReplicatedUsing=OnRep_CandleCoolDonwEndTime)
+	float CandleCoolDownEndTime = 0.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AlkaidCharacter|Candle")
+	float CandleCooldownSeconds;
+
+	bool IsCandleOnCooldown() const;
+
+	UFUNCTION(BlueprintPure, Category = "AlkaidCharater|Candle")
+	float GetCandleCooldownRemainingTime() const;
+
+	void StartCandleCooldown();//server
 
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	//OnRep Functions
 	UFUNCTION()
 	void OnRep_Stamina();
 	UFUNCTION()
 	void OnRep_Speed();	
-
-
+	UFUNCTION()
+	void OnRep_CandleCoolDonwEndTime();
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
