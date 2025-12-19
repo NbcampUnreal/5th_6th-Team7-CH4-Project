@@ -47,8 +47,8 @@ void AAlkaidGameModeBase::ResetRoomOnReturn()
 		{
 			if (AMyPlayerState* MyPS = Cast<AMyPlayerState>(PS))
 			{
-				MyPS->bActorSeamlessTraveled = false;
-				MyPS->bActorSeamlessTraveled = false;
+				MyPS->bInRoom = false;
+				MyPS->bReady = false;
 			}
 		}
 	}

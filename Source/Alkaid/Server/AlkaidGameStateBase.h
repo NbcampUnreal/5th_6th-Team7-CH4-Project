@@ -4,6 +4,8 @@
 #include "GameFramework/GameStateBase.h"
 #include "AlkaidGameStateBase.generated.h"
 
+class AMyPlayerState;
+
 UENUM(BlueprintType)
 enum class ERoomState : uint8
 {
@@ -24,7 +26,7 @@ public:
 	ERoomState RoomState;
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Room")
-	APlayerState* RoomLeaderPS;
+	AMyPlayerState* RoomLeaderPS;
 	
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Room")
 	bool bStartReady;

@@ -19,6 +19,11 @@ void ALobbyGameModeBase::JoinRoom(AMyPlayerState* PS)
 		return;
 	}
 
+	if (!PS)
+	{
+		return;
+	}
+
 	AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>();
 	if (!GS)
 	{
@@ -67,6 +72,11 @@ void ALobbyGameModeBase::JoinRoom(AMyPlayerState* PS)
 void ALobbyGameModeBase::LeaveRoom(AMyPlayerState* PS)
 {
 	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (!PS)
 	{
 		return;
 	}
@@ -156,7 +166,23 @@ void ALobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 
 void ALobbyGameModeBase::Logout(AController* Exiting)
 {
+	AMyPlayerState* ExitingPS = Exiting ? Exiting->GetPlayerState<AMyPlayerState>() : nullptr;
+
 	Super::Logout(Exiting);
+
+	if (ExitingPS)
+	{
+		ExitingPS->bInRoom = false;
+		ExitingPS->bReady = false;
+
+		if (AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>())
+		{
+			if (GS->RoomLeaderPS == ExitingPS)
+			{
+				GS->RoomLeaderPS = nullptr;
+			}
+		}
+	}
 
 	EnsureRoomLeader();
 	UpdateRoomCounts();
@@ -173,12 +199,9 @@ void ALobbyGameModeBase::EnsureRoomLeader()
 
 	if (GS->RoomLeaderPS)
 	{
-		if (const AMyPlayerState* Leader = Cast<AMyPlayerState>(GS->RoomLeaderPS))
+		if (GS->RoomLeaderPS->bInRoom)
 		{
-			if (Leader->bInRoom)
-			{
-				return;
-			}
+			return;
 		}
 		GS->RoomLeaderPS = nullptr;
 	}
