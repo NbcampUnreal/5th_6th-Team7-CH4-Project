@@ -12,13 +12,23 @@ class ALKAID_API AMyPlayerState : public APlayerState
 public:
 	AMyPlayerState();
 
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Room")
+	bool bInRoom;
 	//준비 상태.
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Ready")
-	bool bIsReady;
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Room")
+	bool bReady;
 
-	//UI에서 호출 -> 서버가 Ready 상태를 갱신.
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Room")
+	void ServerJoinRoom();
+
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Room")
+	void ServerLeaveRoom();
+
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Room")
 	void ServerSetReady(bool bNewReady);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Room")
+	void ServerLeaderStart();
 
 	//Replicated 변수 등록.
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
