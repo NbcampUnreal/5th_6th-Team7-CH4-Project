@@ -58,7 +58,7 @@ public:
 	void AddNomalSpeed(float Amount);//server
 
 	void ApplySpeed();
-
+	                                                                         
 
 	//candle
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Candle")

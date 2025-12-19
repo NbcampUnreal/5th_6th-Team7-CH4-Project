@@ -58,6 +58,7 @@ void AAlkaidCharacter::BeginPlay()
 		checkf(IsValid(EILPS) == true, TEXT("EnhancedInputLocalPlayerSubsystem is invalid."));
 
 		EILPS->AddMappingContext(InputMappingContext, 0);
+		StaminaWidgetInstance->AddToViewport();
 	}
 	
 }

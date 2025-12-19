@@ -56,8 +56,8 @@ public:
 
 	//server
 	UFUNCTION(Server, Reliable)
-	void ServerUseCandle();
-	
+	void ServerUseCandle(); 
+
 	//Input
 private:
 	void HandleMoveInput(const FInputActionValue& InValue);
@@ -112,6 +112,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "EscMessage")
 	TSubclassOf<UUserWidget> EscWidgetClass;
 
+	UPROPERTY(EditAnywhere, Category = "StaminaWidget")
+	TSubclassOf<UUserWidget> StaminaWidget;
 private:
 	UPROPERTY()
 	TObjectPtr<AActor> HeldItemRight;
@@ -124,5 +126,8 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> EscWidgetInstance;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> StaminaWidgetInstance;
 
 };
