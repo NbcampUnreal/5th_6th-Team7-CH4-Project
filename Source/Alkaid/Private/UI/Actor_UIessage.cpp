@@ -1,5 +1,7 @@
 #include "UI/Actor_UIessage.h"
 #include "Blueprint/UserWidget.h"
+#include "Net/UnrealNetwork.h"
+#include "Character/AlkaidCharacter.h"
 
 AActor_UIessage::AActor_UIessage()
 {
@@ -26,18 +28,34 @@ void AActor_UIessage::BeginPlay()
 
 void AActor_UIessage::OnBoxOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (IsValid(MessageWidgetInstance) == true)
+
+	if (bHasMessageDisplayed) return;
+
+	AAlkaidCharacter* OverlapCharacter = Cast<AAlkaidCharacter>(OtherActor);
+
+	if (OverlapCharacter && OverlapCharacter->IsLocallyControlled())
 	{
-		MessageWidgetInstance->AddToViewport();
+		if (IsValid(MessageWidgetClass) == true)
+		{
+			if (IsValid(MessageWidgetInstance))
+			{
+				MessageWidgetInstance->AddToViewport();
+
+				bHasMessageDisplayed = true;
+			}
+		}
 	}
 }
 
 void AActor_UIessage::OnBoxOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (IsValid(MessageWidgetInstance) == true)
+	AAlkaidCharacter* OverlapCharacter = Cast<AAlkaidCharacter>(OtherActor);
+
+	if (OverlapCharacter && OverlapCharacter->IsLocallyControlled())
 	{
-		MessageWidgetInstance->RemoveFromViewport();
+		if (IsValid(MessageWidgetInstance) == true)
+		{
+			MessageWidgetInstance->RemoveFromViewport();
+		}
 	}
 }
-// IsLocalPlayerController 해서 로컬 플레이어인지 확인해서 플레이어일때만 메세지 띄우기 해야함
-// 캐릭터 받으면
