@@ -2,19 +2,21 @@
 
 
 #include "AI/AlkiadAI.h"
+#include "AI/AlkaidAIController.h"
 
 // Sets default values
 AAlkiadAI::AAlkiadAI()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
+	AIControllerClass = AAlkaidAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
-// Called when the game starts or when spawned
+
 void AAlkiadAI::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UE_LOG(LogTemp, Warning, TEXT("AI Pawn has been spawned."));
 	
 }
 
