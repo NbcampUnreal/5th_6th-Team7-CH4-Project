@@ -34,4 +34,7 @@ public:
     UFUNCTION()
     void OnBoxOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+    //트리거 한번 띄우고 더이상 안띄우기
+	bool bHasMessageDisplayed = false;
+
 };
