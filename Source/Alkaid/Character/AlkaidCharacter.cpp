@@ -5,6 +5,7 @@
 #include "Controller/AlkaidPlayerController.h"
 #include "Character/AlkaidCharaterStatComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Blueprint/UserWidget.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -16,7 +17,7 @@
 AAlkaidCharacter::AAlkaidCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -36,7 +37,9 @@ AAlkaidCharacter::AAlkaidCharacter()
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
 	StatComponent = CreateDefaultSubobject<UAlkaidCharaterStatComponent>(TEXT("StatComponent"));
+	StatComponent->SetIsReplicated(true);
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
+	EquipmentComponent->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned
@@ -69,6 +72,22 @@ void AAlkaidCharacter::PostInitializeComponents()
 		StatComponent->ApplySpeed();
 		StatComponent->ApplyStamina();
 	}
+}
+
+void AAlkaidCharacter::ServerUseCandle_Implementation()
+{
+	if (!StatComponent)
+		return; 
+	
+	if(StatComponent->GetCandleCount() <= 0)
+		return;
+
+	if (StatComponent->IsCandleOnCooldown())
+		return;
+
+	StatComponent->StartCandleCooldown();
+	StatComponent->AddCandleCount(-1);
+	StatComponent->AddStamina(20.0f);
 }
 
 void AAlkaidCharacter::HandleMoveInput(const FInputActionValue& InValue)
@@ -114,13 +133,33 @@ void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
 	{
 		return;
 	}
-	StatComponent->AddCandleCount(-1);
-	StatComponent->AddStamina(20.f);
+	if(!HasAuthority())
+	{
+		ServerUseCandle();
+		return;
+	}
+	ServerUseCandle();
 }
 
 void AAlkaidCharacter::HandleAttackInput(const FInputActionValue& InValue)
 {
 
+}
+
+void AAlkaidCharacter::HandleEscUIInput(const FInputActionValue& InValue)
+{
+	if (IsValid(EscWidgetClass) == true)
+	{
+		if (IsValid(EscWidgetInstance))
+		{
+			EscWidgetInstance->AddToViewport();
+		}
+	}
+}
+
+void AAlkaidCharacter::HandleReadyInput(const FInputActionValue& InValue)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Ready Action"));
 }
 
 // Called every frame
@@ -145,5 +184,13 @@ void AAlkaidCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EIC->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 	EIC->BindAction(UsingItem, ETriggerEvent::Started, this, &ThisClass::HandleUsingItemInput);
+
+	EIC->BindAction(UsingCandle, ETriggerEvent::Started, this, &ThisClass::HandleUsingCandleInput);
+
+	EIC->BindAction(EscUI, ETriggerEvent::Started, this, &ThisClass::HandleEscUIInput);
+
+	EIC->BindAction(ReadyAction, ETriggerEvent::Started, this, &ThisClass::HandleReadyInput);
+
+	EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::HandleAttackInput);
 }
 
