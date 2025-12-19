@@ -58,7 +58,7 @@ void AAlkaidCharacter::BeginPlay()
 		checkf(IsValid(EILPS) == true, TEXT("EnhancedInputLocalPlayerSubsystem is invalid."));
 
 		EILPS->AddMappingContext(InputMappingContext, 0);
-		StaminaWidgetInstance->AddToViewport();
+		//StaminaWidgetInstance->AddToViewport();
 	}
 	
 }
@@ -165,7 +165,7 @@ void AAlkaidCharacter::HandleReadyInput(const FInputActionValue& InValue)
 
 void AAlkaidCharacter::HandleStartInput(const FInputActionValue& InValue)
 {
-
+	UE_LOG(LogTemp, Warning, TEXT("Started"));
 }
 
 // Called every frame
