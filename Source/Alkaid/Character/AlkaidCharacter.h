@@ -74,7 +74,7 @@ private:
 
 	void HandleReadyInput(const FInputActionValue& InValue);
 
-
+	void HandleStartInput(const FInputActionValue& InValue);
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -102,6 +102,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputAction> ReadyAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharater|Input")
+	TObjectPtr<UInputAction> StartAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AActor> PuzzleClass;
