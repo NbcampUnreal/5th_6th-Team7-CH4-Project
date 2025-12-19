@@ -1,5 +1,6 @@
 #include "Server/AlkaidGameStateBase.h"
 #include "Net/UnrealNetwork.h"
+#include "MyPlayerState.h"
 
 AAlkaidGameStateBase::AAlkaidGameStateBase()
 {
