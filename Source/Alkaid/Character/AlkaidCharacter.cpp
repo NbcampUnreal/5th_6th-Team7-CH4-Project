@@ -3,7 +3,7 @@
 
 #include "Character/AlkaidCharacter.h"
 #include "Controller/AlkaidPlayerController.h"
-
+#include "Character/AlkaidCharaterStatComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -60,6 +60,17 @@ void AAlkaidCharacter::BeginPlay()
 }
 
 
+void AAlkaidCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if(StatComponent)
+	{
+		StatComponent->ApplySpeed();
+		StatComponent->ApplyStamina();
+	}
+}
+
 void AAlkaidCharacter::HandleMoveInput(const FInputActionValue& InValue)
 {
 	if(IsValid(Controller) == false)
@@ -95,6 +106,21 @@ void AAlkaidCharacter::HandleLookInput(const FInputActionValue& InValue)
 void AAlkaidCharacter::HandleUsingItemInput(const FInputActionValue& InValue)
 {
 	
+}
+
+void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
+{
+	if(StatComponent->GetCandleCount() <= 0)
+	{
+		return;
+	}
+	StatComponent->AddCandleCount(-1);
+	StatComponent->AddStamina(20.f);
+}
+
+void AAlkaidCharacter::HandleAttackInput(const FInputActionValue& InValue)
+{
+
 }
 
 // Called every frame

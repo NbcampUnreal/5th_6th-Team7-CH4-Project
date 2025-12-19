@@ -8,6 +8,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AlkaidCharaterStatComponent.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float/*Current*/, float/*Max*/);
+
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ALKAID_API UAlkaidCharaterStatComponent : public UActorComponent
@@ -19,6 +21,8 @@ public:
 	UAlkaidCharaterStatComponent();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	FOnStaminaChanged OnStaminaChanged;
 
 	// Stamina
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Stamina, Category = "AlkaidCharacter|Stamina")
@@ -41,29 +45,33 @@ public:
 	
 	void StaminaUsing(float DeltaTime, float Damage);//서버
 
+	void ApplyStamina();
+
 	//speed
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Speed, Category = "AlkaidCharacter|Speed")
 	float NomalSpeed;
 
 	FORCEINLINE float GetNomalSpeed() const { return NomalSpeed; }
 
-	FORCEINLINE void SetNomalSpeed(float NewNomalSpeed) //서버
-	{ 
-		NomalSpeed = NewNomalSpeed; 
-		if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
-		{
-			if(UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement())
-			{
-				MoveComp->MaxWalkSpeed = NomalSpeed;
-			}
-		}
-	}
+	void SetNomalSpeed(float NewNomalSpeed); //서버
+	
+	void AddNomalSpeed(float Amount);//서버
 
-	FORCEINLINE void AddNomalSpeed(float Amount) { SetNomalSpeed(NomalSpeed + Amount); }//서버
+	void ApplySpeed();
 
+
+	//candle
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Candle")
 	float CandleCount;
 
-	FORCEINLINE void AddCandleCount(float Amount) { CandleCount += Amount; }//서버	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Candle")
+	float MaxCandleCount = 3.0f;
+
+	FORCEINLINE float GetCandleCount() const { return CandleCount; }
+
+	void AddCandleCount(float Amount);//서버
+
+	void SetCandleCount(float NewCandleCount);//서버
 
 
 protected:
@@ -80,5 +88,5 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	FTimerHandle StaminaTimerHandle;
 };

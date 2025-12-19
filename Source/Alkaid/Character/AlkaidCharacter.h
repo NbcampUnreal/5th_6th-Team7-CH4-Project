@@ -46,6 +46,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
 	UEquipmentComponent* EquipmentComponent;
 
+	void PostInitializeComponents() override;
+
 public:
 	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
@@ -58,6 +60,10 @@ private:
 	void HandleLookInput(const FInputActionValue& InValue);
 
 	void HandleUsingItemInput(const FInputActionValue& InValue);
+	
+	void HandleUsingCandleInput(const FInputActionValue& InValue);
+
+	void HandleAttackInput(const FInputActionValue& InValue);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
@@ -74,6 +80,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputAction> UsingItem;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
+	TObjectPtr<UInputAction> UsingCandle;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
+	TObjectPtr<UInputAction> AttackAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AActor> PuzzleClass;
