@@ -56,8 +56,8 @@ public:
 
 	//server
 	UFUNCTION(Server, Reliable)
-	void ServerUseCandle();
-	
+	void ServerUseCandle(); 
+
 	//Input
 private:
 	void HandleMoveInput(const FInputActionValue& InValue);
@@ -74,7 +74,7 @@ private:
 
 	void HandleReadyInput(const FInputActionValue& InValue);
 
-
+	void HandleStartInput(const FInputActionValue& InValue);
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -103,6 +103,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputAction> ReadyAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharater|Input")
+	TObjectPtr<UInputAction> StartAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AActor> PuzzleClass;
 
@@ -112,6 +115,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "EscMessage")
 	TSubclassOf<UUserWidget> EscWidgetClass;
 
+	UPROPERTY(EditAnywhere, Category = "StaminaWidget")
+	TSubclassOf<UUserWidget> StaminaWidget;
 private:
 	UPROPERTY()
 	TObjectPtr<AActor> HeldItemRight;
@@ -124,5 +129,8 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> EscWidgetInstance;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> StaminaWidgetInstance;
 
 };
