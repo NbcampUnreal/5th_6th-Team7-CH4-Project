@@ -1,0 +1,92 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "AlkaidCharaterStatComponent.generated.h"
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float/*Current*/, float/*Max*/);
+
+
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class ALKAID_API UAlkaidCharaterStatComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this component's properties
+	UAlkaidCharaterStatComponent();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	FOnStaminaChanged OnStaminaChanged;
+
+	// Stamina
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Stamina, Category = "AlkaidCharacter|Stamina")
+	float Stamina;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Stamina")
+	float MaxStamina;
+
+	void AddStamina(float Amount); //서버
+
+	FORCEINLINE float GetStamina() const { return Stamina; }
+
+	void SetStamina(float NewStamina); //서버
+
+	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
+
+	void SetMaxStamina(float NewMaxStamina); //서버
+	
+	void AddMaxStamina(float Amount); //서버
+	
+	void StaminaUsing(float DeltaTime, float Damage);//서버
+
+	void ApplyStamina();
+
+	//speed
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Speed, Category = "AlkaidCharacter|Speed")
+	float NomalSpeed;
+
+	FORCEINLINE float GetNomalSpeed() const { return NomalSpeed; }
+
+	void SetNomalSpeed(float NewNomalSpeed); //서버
+	
+	void AddNomalSpeed(float Amount);//서버
+
+	void ApplySpeed();
+
+
+	//candle
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Candle")
+	float CandleCount;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Candle")
+	float MaxCandleCount = 3.0f;
+
+	FORCEINLINE float GetCandleCount() const { return CandleCount; }
+
+	void AddCandleCount(float Amount);//서버
+
+	void SetCandleCount(float NewCandleCount);//서버
+
+
+protected:
+	// Called when the game starts
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void OnRep_Stamina();
+	UFUNCTION()
+	void OnRep_Speed();	
+
+
+public:	
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	FTimerHandle StaminaTimerHandle;
+};
