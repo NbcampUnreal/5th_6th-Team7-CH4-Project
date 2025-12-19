@@ -14,6 +14,7 @@ class UCameraComponent;
 class USpringArmComponent;
 class UInputMappingContext;
 class UInputAction;
+class UUserWidget;
 
 UCLASS()
 class ALKAID_API AAlkaidCharacter : public ACharacter
@@ -46,12 +47,16 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
 	UEquipmentComponent* EquipmentComponent;
 
+	//component
 	void PostInitializeComponents() override;
 
 public:
 	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 
+	//server
+	UFUNCTION(Server, Reliable)
+	void ServerUseCandle();
 	
 	//Input
 private:
@@ -64,6 +69,11 @@ private:
 	void HandleUsingCandleInput(const FInputActionValue& InValue);
 
 	void HandleAttackInput(const FInputActionValue& InValue);
+
+	void HandleEscUIInput(const FInputActionValue& InValue);
+
+	void HandleReadyInput(const FInputActionValue& InValue);
+
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
@@ -87,11 +97,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputAction> AttackAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
+	TObjectPtr<UInputAction> EscUI;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
+	TObjectPtr<UInputAction> ReadyAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AActor> PuzzleClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AActor> BlockClass;
+
+	UPROPERTY(EditAnywhere, Category = "EscMessage")
+	TSubclassOf<UUserWidget> EscWidgetClass;
+
 private:
 	UPROPERTY()
 	TObjectPtr<AActor> HeldItemRight;
@@ -102,6 +122,7 @@ private:
 	UPROPERTY()
 	TObjectPtr<AActor> Pushing;
 
-
+	UPROPERTY()
+	TObjectPtr<UUserWidget> EscWidgetInstance;
 
 };
