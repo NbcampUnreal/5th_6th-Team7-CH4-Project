@@ -21,7 +21,7 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* StaminaText;
 
-	/*UPROPERTY(meta = (BindWidget))
-	UTextBlock* CandleAmount;*/
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* CandleAmount;
 
 };

@@ -58,20 +58,25 @@ public:
 	void AddNomalSpeed(float Amount);//server
 
 	void ApplySpeed();
-	                                                                         
+	                  
+	// 스태미나 HUD 업데이트
+	void UpdateHUDStamina();
 
+	/*
 	//candle
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Candle")
-	float CandleCount;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Candle")
+	//int32 CandleCount;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Candle")
-	float MaxCandleCount = 3.0f;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Candle")
+	//int32 MaxCandleCount = 3;
 
-	FORCEINLINE float GetCandleCount() const { return CandleCount; }
+	//FORCEINLINE float GetCandleCount() const { return CandleCount; }
 
-	void AddCandleCount(float Amount);//server
+	//void AddCandleCount(float Amount);//server
 
-	void SetCandleCount(float NewCandleCount);//server
+	//void SetCandleCount(float NewCandleCount);//server
+	*/
+
 
 	//candle cooltime
 	UPROPERTY(ReplicatedUsing=OnRep_CandleCoolDonwEndTime)

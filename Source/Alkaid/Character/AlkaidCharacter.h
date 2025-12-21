@@ -50,6 +50,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
 	class UItemComponent* ItemComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
+	class UBuffComponent* BuffComponent;
+
 	//component
 	void PostInitializeComponents() override;
 
@@ -137,9 +140,15 @@ private:
 	UPROPERTY()
 	TObjectPtr<UUserWidget> StaminaWidgetInstance;
 
+	UPROPERTY()
+	bool bElimmed = false;	// 촛불 제단안에 들어왔는가 아닌가
+
 
 public:
 	// Getter, Setter
 	FORCEINLINE UItemComponent* GetItemComp() const { return ItemComponent; }
+	FORCEINLINE UBuffComponent* GetBuffComp() const { return BuffComponent; }
+	// 촛불제단안에 들어왔는가 아닌가
+	FORCEINLINE bool IsElimmed() const { return bElimmed; }		
 
 };

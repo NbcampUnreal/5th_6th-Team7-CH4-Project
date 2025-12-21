@@ -33,3 +33,20 @@ void AAlkaidPlayerController::SetHUDStamina(float Stamina, float MaxStamina)
 		AKHUD->CharacterOverlay->StaminaText->SetText(FText::FromString(StaminaText));
 	}
 }
+
+void AAlkaidPlayerController::SetHUDCandle(int32 Candle)
+{
+	AKHUD = AKHUD == nullptr ? Cast<AAKHUD>(GetHUD()) : AKHUD;
+
+	bool bHUDValid = AKHUD &&
+		AKHUD->CharacterOverlay &&
+		AKHUD->CharacterOverlay->CandleAmount;
+
+	if (bHUDValid)
+	{
+		FString CandleText = FString::Printf(TEXT( "%d" ), Candle);
+		AKHUD->CharacterOverlay->CandleAmount->SetText(FText::FromString(CandleText));
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("SetHUDCandle() 함수 호출 양호 "));
+}

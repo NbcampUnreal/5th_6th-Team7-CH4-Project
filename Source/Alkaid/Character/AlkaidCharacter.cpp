@@ -13,6 +13,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/PrimitiveComponent.h"
 #include "Items/AKComponents/ItemComponent.h"
+#include "Items/AKComponents/BuffComponent.h"
 
 // Sets default values
 AAlkaidCharacter::AAlkaidCharacter()
@@ -45,6 +46,10 @@ AAlkaidCharacter::AAlkaidCharacter()
 	// ItemComponent 생성및 초기화
 	ItemComponent = CreateDefaultSubobject<UItemComponent>(TEXT("ItemComponent"));
 	ItemComponent->SetIsReplicated(true);
+
+	// BuffComponent 생성및 초기화
+	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	BuffComponent->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned
@@ -82,21 +87,26 @@ void AAlkaidCharacter::PostInitializeComponents()
 	{
 		ItemComponent->AKCharacter = this;
 	}
+	if (BuffComponent)
+	{
+		BuffComponent->AKCharacter = this;
+		BuffComponent->AKStatComp = StatComponent;
+	}
 }
 
 void AAlkaidCharacter::ServerUseCandle_Implementation()
 {
-	if (!StatComponent)
+	if (!StatComponent && !ItemComponent)
 		return; 
 	
-	if(StatComponent->GetCandleCount() <= 0)
+	if(ItemComponent->GetCandle() <= 0)
 		return;
 
 	if (StatComponent->IsCandleOnCooldown())
 		return;
 
 	StatComponent->StartCandleCooldown();
-	StatComponent->AddCandleCount(-1);
+	ItemComponent->SpendRound();
 	StatComponent->AddStamina(20.0f);
 }
 
@@ -139,7 +149,7 @@ void AAlkaidCharacter::HandleUsingItemInput(const FInputActionValue& InValue)
 
 void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
 {
-	if(StatComponent->GetCandleCount() <= 0)
+	if(ItemComponent->GetCandle() <= 0)
 	{
 		return;
 	}

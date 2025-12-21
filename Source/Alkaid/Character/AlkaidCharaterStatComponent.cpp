@@ -18,7 +18,7 @@ UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
 	MaxStamina = 100.0f;
 	Stamina = MaxStamina;
 	NomalSpeed = 500.0f;
-	CandleCount = 0.0f;
+	//CandleCount = 0.0f;
 	CandleCooldownSeconds = 3.0f;
 }
 
@@ -29,7 +29,7 @@ void UAlkaidCharaterStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, Stamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, MaxStamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, NomalSpeed);
-	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCount);
+	//DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCount);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCoolDownEndTime);
 }
 
@@ -122,21 +122,35 @@ void UAlkaidCharaterStatComponent::ApplySpeed()
 	}
 }
 
-void UAlkaidCharaterStatComponent::AddCandleCount(float Amount)
+void UAlkaidCharaterStatComponent::UpdateHUDStamina()
 {
-	if (GetOwner() && GetOwner()->HasAuthority())
+	AKCharacter = AKCharacter == nullptr ? Cast<AAlkaidCharacter>(GetOwner()) : AKCharacter;
+	if (AKCharacter)
 	{
-		CandleCount =  FMath::Clamp(CandleCount + Amount, 0.0f, MaxCandleCount);
+		AKPlayerController = AKPlayerController == nullptr 
+			? Cast<AAlkaidPlayerController>(AKCharacter->Controller) : AKPlayerController;
+		if (AKPlayerController)
+		{
+			AKPlayerController->SetHUDStamina(Stamina, MaxStamina);
+		}
 	}
 }
 
-void UAlkaidCharaterStatComponent::SetCandleCount(float NewCandleCount)
-{
-	if (GetOwner() && GetOwner()->HasAuthority())
-	{
-		CandleCount = FMath::Clamp(NewCandleCount, 0.0f, MaxCandleCount);
-	}
-}
+//void UAlkaidCharaterStatComponent::AddCandleCount(float Amount)
+//{
+//	if (GetOwner() && GetOwner()->HasAuthority())
+//	{
+//		CandleCount =  FMath::Clamp(CandleCount + Amount, 0.0f, MaxCandleCount);
+//	}
+//}
+//
+//void UAlkaidCharaterStatComponent::SetCandleCount(float NewCandleCount)
+//{
+//	if (GetOwner() && GetOwner()->HasAuthority())
+//	{
+//		CandleCount = FMath::Clamp(NewCandleCount, 0.0f, MaxCandleCount);
+//	}
+//}
 
 bool UAlkaidCharaterStatComponent::IsCandleOnCooldown() const
 {

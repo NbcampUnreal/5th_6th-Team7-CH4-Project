@@ -43,15 +43,22 @@ private:
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Candle)
 	int32 Candle;
 
+	UPROPERTY(EditAnywhere)
+	int32 CandleMaxCapacity = 3;
+
 	// Candle 개수의 변화가 있을 때 Replicated 해줄 함수 호출용
 	UFUNCTION()
 	void OnRep_Candle();
 
-	UPROPERTY(EditAnywhere)
-	int32 CandleMaxCapacity;
+	UFUNCTION()
+	// Candle 1개 소비 / 해당 Candle의 유효한 소유자 확인 - 해당 소유자 HUD 업데이트
+	void SpendRound();
+
 
 public:	
-	
+	FORCEINLINE int32 GetCandle() const { return Candle; }
+	FORCEINLINE void SetCandle(float Amount) { Candle = Amount; }
+	FORCEINLINE int32 GetMaxCandle() const { return CandleMaxCapacity; }
 
 		
 };
