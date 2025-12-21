@@ -99,6 +99,15 @@ protected:
 	void OnRep_Speed();	
 	UFUNCTION()
 	void OnRep_CandleCoolDonwEndTime();
+
+
+private:
+	UPROPERTY()
+	class AAlkaidPlayerController* AKPlayerController;
+
+	UPROPERTY()
+	class AAlkaidCharacter* AKCharacter;
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

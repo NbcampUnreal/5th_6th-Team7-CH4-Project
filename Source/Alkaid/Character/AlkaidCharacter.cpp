@@ -12,6 +12,7 @@
 #include "EnhancedInputComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/PrimitiveComponent.h"
+#include "Items/AKComponents/ItemComponent.h"
 
 // Sets default values
 AAlkaidCharacter::AAlkaidCharacter()
@@ -40,6 +41,10 @@ AAlkaidCharacter::AAlkaidCharacter()
 	StatComponent->SetIsReplicated(true);
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 	EquipmentComponent->SetIsReplicated(true);
+
+	// ItemComponent 생성및 초기화
+	ItemComponent = CreateDefaultSubobject<UItemComponent>(TEXT("ItemComponent"));
+	ItemComponent->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned
@@ -72,6 +77,10 @@ void AAlkaidCharacter::PostInitializeComponents()
 	{
 		StatComponent->ApplySpeed();
 		StatComponent->ApplyStamina();
+	}
+	if (ItemComponent)
+	{
+		ItemComponent->AKCharacter = this;
 	}
 }
 

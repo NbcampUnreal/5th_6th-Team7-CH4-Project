@@ -47,8 +47,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
 	UEquipmentComponent* EquipmentComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
+	class UItemComponent* ItemComponent;
+
 	//component
 	void PostInitializeComponents() override;
+
 
 public:
 	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
@@ -132,5 +136,10 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> StaminaWidgetInstance;
+
+
+public:
+	// Getter, Setter
+	FORCEINLINE UItemComponent* GetItemComp() const { return ItemComponent; }
 
 };

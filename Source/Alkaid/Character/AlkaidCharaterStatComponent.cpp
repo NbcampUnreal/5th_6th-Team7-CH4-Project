@@ -4,6 +4,8 @@
 #include "Character/AlkaidCharaterStatComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Alkaid/Controller/AlkaidPlayerController.h"
+#include "Alkaid/Character/AlkaidCharacter.h"
 
 // Sets default values for this component's properties
 UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
@@ -170,6 +172,16 @@ void UAlkaidCharaterStatComponent::BeginPlay()
 	}
 	ApplyStamina();
 	ApplySpeed();
+
+	if (!AKCharacter)
+	{
+		AKCharacter = Cast<AAlkaidCharacter>(GetOwner());
+	}
+	AKPlayerController = Cast<AAlkaidPlayerController>(AKCharacter->Controller);
+	if (AKPlayerController)
+	{
+		AKPlayerController->SetHUDStamina(Stamina, MaxStamina);
+	}
 }
 
 void UAlkaidCharaterStatComponent::OnRep_Stamina()
