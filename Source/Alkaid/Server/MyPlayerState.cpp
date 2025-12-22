@@ -56,6 +56,11 @@ void AMyPlayerState::ServerSetReady_Implementation(bool bNewReady)
 		UE_LOG(LogTemp, Warning, TEXT("Not in Room : %s"), *GetPlayerName());
 		return;
 	}
+
+	if (bReady == bNewReady)
+	{
+		return;
+	}
 	UE_LOG(LogTemp, Warning, TEXT("ServerSetReady %s -> %s"), *GetPlayerName(), bNewReady ? TEXT("Ready") : TEXT("NotReady"));
 	//상태 갱신.
 	bReady = bNewReady;
