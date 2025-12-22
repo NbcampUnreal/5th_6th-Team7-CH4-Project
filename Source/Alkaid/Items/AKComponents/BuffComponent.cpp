@@ -111,6 +111,7 @@ void UBuffComponent::StopHealing()
 	}
 }
 
+
 void UBuffComponent::HealRampUp(float DeltaTime)
 {
 	// 회복하지 않는 상태나 캐릭터가 범위를 벗어나면 조기 종료
@@ -149,6 +150,49 @@ void UBuffComponent::HealRampUp(float DeltaTime)
 		UE_LOG(LogTemp, Warning, TEXT("[BuffComponent] 회복 완료 | 최종 체력: %.1f / %.1f"),
 			AKStatComp->GetStamina(), AKStatComp->GetMaxStamina());
 	}
+}
+
+
+void UBuffComponent::SetInitialSpeeds(float BaseSpeed, float CrouchSpeed)
+{
+	InitialBaseSpeed = BaseSpeed;
+	InitialCrouchSpeed = CrouchSpeed;
+}
+
+void UBuffComponent::BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime)
+{
+	if (AKCharacter == nullptr) return;
+
+	AKCharacter->GetWorldTimerManager().SetTimer(
+		SpeedBuffTiemr,
+		this,
+		&UBuffComponent::ResetSpeeds,
+		BuffTime
+	);
+
+	if (AKCharacter->GetCharacterMovement())	// CharacterMovement 초기화
+	{
+		AKCharacter->GetCharacterMovement()->MaxWalkSpeed = BuffBaseSpeed;
+		AKCharacter->GetCharacterMovement()->MaxWalkSpeedCrouched = BuffCrouchSpeed;
+	}
+	MulticastSpeedBuff(BuffBaseSpeed, BuffCrouchSpeed);
+}
+
+
+
+void UBuffComponent::ResetSpeeds()
+{
+	if (AKCharacter == nullptr || AKCharacter->GetCharacterMovement() == nullptr) return;
+
+	AKCharacter->GetCharacterMovement()->MaxWalkSpeed = InitialBaseSpeed;
+	AKCharacter->GetCharacterMovement()->MaxWalkSpeedCrouched = InitialCrouchSpeed;
+	MulticastSpeedBuff(InitialBaseSpeed, InitialCrouchSpeed);
+}
+
+void UBuffComponent::MulticastSpeedBuff_Implementation(float BaseSpeed, float CrouchSpeed)
+{
+	AKCharacter->GetCharacterMovement()->MaxWalkSpeed = BaseSpeed;
+	AKCharacter->GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
 }
 
 
