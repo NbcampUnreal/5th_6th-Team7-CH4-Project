@@ -22,20 +22,6 @@ void AMyPlayerState::ServerJoinRoom_Implementation()
 	}
 }
 
-void AMyPlayerState::ServerLeaderStart_Implementation()
-{
-	if (!HasAuthority())
-	{
-		return;
-	}
-
-	if (ALobbyGameModeBase* GM = GetWorld() ? GetWorld()->GetAuthGameMode<ALobbyGameModeBase>() : nullptr)
-	{
-		GM->LeaderStart(this);
-	}
-
-}
-
 void AMyPlayerState::ServerLeaveRoom_Implementation()
 {
 	if (!HasAuthority())
@@ -68,6 +54,11 @@ void AMyPlayerState::ServerSetReady_Implementation(bool bNewReady)
 	if (!bInRoom)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Not in Room : %s"), *GetPlayerName());
+		return;
+	}
+
+	if (bReady == bNewReady)
+	{
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("ServerSetReady %s -> %s"), *GetPlayerName(), bNewReady ? TEXT("Ready") : TEXT("NotReady"));

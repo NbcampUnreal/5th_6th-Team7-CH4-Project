@@ -19,9 +19,10 @@ public:
 	//로비로 복귀.
 	UFUNCTION(BlueprintCallable)
 	void ReturnToLobby();
+	void TravelTo(const FString& MapPath);
+
 
 protected:
 	//맵 이동.
-	void TravelTo(const FString& MapPath);
 	void ResetRoomOnReturn();
 };
