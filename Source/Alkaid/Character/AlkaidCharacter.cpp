@@ -98,6 +98,10 @@ void AAlkaidCharacter::PostInitializeComponents()
 	{
 		BuffComponent->AKCharacter = this;
 		BuffComponent->AKStatComp = StatComponent;
+		BuffComponent->SetInitialSpeeds(
+			GetCharacterMovement()->MaxWalkSpeed,
+			GetCharacterMovement()->MaxWalkSpeedCrouched
+		);
 	}
 }
 
