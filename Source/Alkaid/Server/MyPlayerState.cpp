@@ -22,20 +22,6 @@ void AMyPlayerState::ServerJoinRoom_Implementation()
 	}
 }
 
-void AMyPlayerState::ServerLeaderStart_Implementation()
-{
-	if (!HasAuthority())
-	{
-		return;
-	}
-
-	if (ALobbyGameModeBase* GM = GetWorld() ? GetWorld()->GetAuthGameMode<ALobbyGameModeBase>() : nullptr)
-	{
-		GM->LeaderStart(this);
-	}
-
-}
-
 void AMyPlayerState::ServerLeaveRoom_Implementation()
 {
 	if (!HasAuthority())
