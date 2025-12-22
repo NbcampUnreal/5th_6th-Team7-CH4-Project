@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AlkaidCharaterStatComponent.generated.h"
 
+
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float/*Current*/, float/*Max*/);
 
 
@@ -69,7 +70,7 @@ public:
 
 	FORCEINLINE float GetCandleCount() const { return CandleCount; }
 
-	void AddCandleCount(float Amount);//server
+	void AddCandleCount(int32 Amount);//server
 
 	void SetCandleCount(float NewCandleCount);//server
 
@@ -86,6 +87,24 @@ public:
 	float GetCandleCooldownRemainingTime() const;
 
 	void StartCandleCooldown();//server
+	
+	//sprint
+	UPROPERTY(EditDefaultsOnly, Replicated, Category = "AlkaidCharacter|Speed")
+	float BaseWalkSpeed = 500;
+
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "AlkaidCharacter|Speed")
+	float SpeedBonus = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|SprintSpeed")
+	float SprintMultiplier = 1.5f;
+
+	FORCEINLINE float GetSprintSpeed() const { return BaseWalkSpeed * SprintMultiplier + SpeedBonus; }
+
+	FORCEINLINE float GetFinalMoveSpeed(bool bSprinting) const
+	{
+		const float Base = GetSprintSpeed();
+		return bSprinting ? Base * SprintMultiplier : Base;
+	}
 
 
 protected:
