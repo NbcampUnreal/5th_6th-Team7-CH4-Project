@@ -14,7 +14,7 @@ public class Alkaid : ModuleRules
 
         PublicIncludePaths.AddRange(new string[]
         {
-            "Alkaid","Server" 
+            "Alkaid","Server","NavigationSystem", "Niagara",
         });
 
         // Uncomment if you are using Slate UI

@@ -3,26 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
-#include "AlkiadAI.generated.h"
+#include "GameFramework/Character.h"
+#include "AlkiadAICharacter.generated.h"
 
 UCLASS()
-class ALKAID_API AAlkiadAI : public APawn
+class ALKAID_API AAlkiadAICharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
 	
-	AAlkiadAI();
+	AAlkiadAICharacter();
 
 protected:
 	
 	virtual void BeginPlay() override;
 
 public:	
-	
-	virtual void Tick(float DeltaTime) override;
-
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
