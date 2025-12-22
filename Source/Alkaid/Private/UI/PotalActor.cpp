@@ -1,7 +1,8 @@
 #include "UI/PotalActor.h"
 #include "Components/BoxComponent.h"
-#include "Components/WidgetComponent.h" // 헤더 추가 필수
+#include "Components/WidgetComponent.h"
 #include "Character/AlkaidCharacter.h"
+#include "Server/MyPlayerState.h"
 
 APotalActor::APotalActor()
 {
@@ -13,7 +14,7 @@ APotalActor::APotalActor()
     PotalMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PotalMesh"));
     PotalMesh->SetupAttachment(RootComponent);
 
-    
+    //상호작용 
     InteractionWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionWidgetComponent"));
     InteractionWidgetComponent->SetupAttachment(RootComponent);
     InteractionWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
