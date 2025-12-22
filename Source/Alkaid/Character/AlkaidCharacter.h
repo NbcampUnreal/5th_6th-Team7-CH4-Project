@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -41,22 +40,33 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AlkaidCharacter|Component")
 	TObjectPtr<UCameraComponent> Camera;
 
+	//component
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
 	UAlkaidCharaterStatComponent* StatComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
 	UEquipmentComponent* EquipmentComponent;
 
-	//component
+	
 	void PostInitializeComponents() override;
-
 public:
 	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 
+	//Sprint
+	UPROPERTY(Replicated)
+	bool bIsSprinting = false;
+
+	void SprintSpeed_Server();
 	//server
 	UFUNCTION(Server, Reliable)
 	void ServerUseCandle(); 
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetSprinting(bool NewSprinting);
 
 	//Input
 private:
@@ -75,6 +85,10 @@ private:
 	void HandleReadyInput(const FInputActionValue& InValue);
 
 	void HandleStartInput(const FInputActionValue& InValue);
+
+	void StartSprint(const FInputActionValue& Invalue);
+
+	void StopSprint(const FInputActionValue& Invalue);
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -105,6 +119,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharater|Input")
 	TObjectPtr<UInputAction> StartAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
+	TObjectPtr<UInputAction> SprintAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AActor> PuzzleClass;

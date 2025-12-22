@@ -8,7 +8,7 @@ public class Alkaid : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" , "UMG", "NavigationSystem",  });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" , "UMG", "NavigationSystem", "NavigationSystem", "Niagara", });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

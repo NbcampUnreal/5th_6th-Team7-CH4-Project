@@ -11,6 +11,7 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Net/UnrealNetwork.h"
 #include "Components/PrimitiveComponent.h"
 
 // Sets default values
@@ -18,6 +19,7 @@ AAlkaidCharacter::AAlkaidCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -47,11 +49,18 @@ void AAlkaidCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-
+	/*UE_LOG(LogTemp, Warning, TEXT("[BEGINPLAY] Local=%d Controller=%s"),
+		IsLocallyControlled(),
+		*GetNameSafe(GetController())
+	);*/
 
 	if (IsLocallyControlled() == true)
 	{
 		APlayerController* PC = Cast<APlayerController>(GetController());
+		/*UE_LOG(LogTemp, Warning, TEXT("[BEGINPLAY] PC=%s LocalPlayer=%s"),
+			*GetNameSafe(PC),
+			PC ? *GetNameSafe(PC->GetLocalPlayer()) : TEXT("null")
+		);*/
 		checkf(IsValid(PC) == true, TEXT("PlayerController is invalid."));
 
 		UEnhancedInputLocalPlayerSubsystem* EILPS = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
@@ -59,7 +68,13 @@ void AAlkaidCharacter::BeginPlay()
 
 		EILPS->AddMappingContext(InputMappingContext, 0);
 		//StaminaWidgetInstance->AddToViewport();
+		if (IsValid(EscWidgetClass) == true)
+		{
+			EscWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), EscWidgetClass);
+
+		}
 	}
+	
 	
 }
 
@@ -85,10 +100,41 @@ void AAlkaidCharacter::ServerUseCandle_Implementation()
 
 	if (StatComponent->IsCandleOnCooldown())
 		return;
-
+	
 	StatComponent->StartCandleCooldown();
 	StatComponent->AddCandleCount(-1);
-	StatComponent->AddStamina(20.0f);
+	StatComponent->AddStamina(20);
+
+	/*UE_LOG(LogTemp, Warning, TEXT("[SERVER] After Use: Stamina=%f/%f Candle=%f EndTime=%f"),
+		StatComponent->GetStamina(),
+		StatComponent->GetMaxStamina(),
+		StatComponent->GetCandleCount(),
+		StatComponent->CandleCoolDownEndTime);*/
+	
+}
+
+void AAlkaidCharacter::SprintSpeed_Server()
+{
+	if (!HasAuthority())
+		return;
+	if (!StatComponent)
+		return;
+
+	const float NewSpeed = StatComponent->GetFinalMoveSpeed(bIsSprinting);
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+}
+
+void AAlkaidCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AAlkaidCharacter, bIsSprinting);
+}
+
+void AAlkaidCharacter::ServerSetSprinting_Implementation(bool NewSprinting)
+{
+	bIsSprinting = NewSprinting;
+
+	SprintSpeed_Server();
 }
 
 void AAlkaidCharacter::HandleMoveInput(const FInputActionValue& InValue)
@@ -130,6 +176,17 @@ void AAlkaidCharacter::HandleUsingItemInput(const FInputActionValue& InValue)
 
 void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
 {
+	/*UE_LOG(LogTemp, Warning, TEXT("[INPUT] HandleUsingCandleInput fired. Local=%d HasAuth=%d Role=%d Controller=%s"),
+		IsLocallyControlled(),
+		HasAuthority(),
+		(int32)GetLocalRole(),
+		*GetNameSafe(GetController())
+	);*/
+
+	if (StatComponent->GetStamina() >= StatComponent->GetMaxStamina())
+	{
+		return;
+	}
 	if(StatComponent->GetCandleCount() <= 0)
 	{
 		return;
@@ -139,6 +196,7 @@ void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
 		ServerUseCandle();
 		return;
 	}
+	
 	ServerUseCandle();
 }
 
@@ -154,6 +212,18 @@ void AAlkaidCharacter::HandleEscUIInput(const FInputActionValue& InValue)
 		if (IsValid(EscWidgetInstance))
 		{
 			EscWidgetInstance->AddToViewport();
+			// Add 164~175줄 수정 UI 작업
+			// 마우스 커서를 보이게
+			APlayerController* UIMouse = Cast<APlayerController>(GetController());
+			if (UIMouse)
+			{
+				FInputModeGameAndUI InputUIMode;
+				InputUIMode.SetWidgetToFocus(EscWidgetInstance->TakeWidget()); //포커스 설정, 마우스가 UI를 가리키도록
+				InputUIMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock); //마우스 고정, 화면 밖으로 못나가게
+
+				UIMouse->SetInputMode(InputUIMode); // 입력우선순위 설정
+				UIMouse->bShowMouseCursor = true;
+			} //End
 		}
 	}
 }
@@ -168,10 +238,47 @@ void AAlkaidCharacter::HandleStartInput(const FInputActionValue& InValue)
 	UE_LOG(LogTemp, Warning, TEXT("Started"));
 }
 
+void AAlkaidCharacter::StartSprint(const FInputActionValue& Invalue)
+{
+	if (!IsLocallyControlled())
+		return;
+	if(StatComponent&& StatComponent->GetStamina() <= 0.0f)
+		return;
+
+	ServerSetSprinting(true);
+}
+
+void AAlkaidCharacter::StopSprint(const FInputActionValue& Invalue)
+{
+	if (!IsLocallyControlled())
+		return;
+
+	ServerSetSprinting(false);
+}
+
 // Called every frame
 void AAlkaidCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if(!HasAuthority())
+		return;
+
+	if (bIsSprinting)
+	{
+		const float Speed2D = GetVelocity().Size2D();
+		const bool bIsMoving = Speed2D > 3.0f;
+		if (bIsMoving)
+		{
+			StatComponent->AddStamina(-1 * DeltaTime);
+			if (StatComponent->GetStamina() <= 0.0f)
+			{
+				bIsSprinting = false;
+				SprintSpeed_Server();
+			}
+		}
+	}
+
 
 }
 
@@ -200,5 +307,8 @@ void AAlkaidCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::HandleAttackInput);
 
 	EIC->BindAction(StartAction, ETriggerEvent::Started, this, &ThisClass::HandleStartInput);
+
+	EIC->BindAction(SprintAction, ETriggerEvent::Started, this, &ThisClass::StartSprint);
+	EIC->BindAction(SprintAction, ETriggerEvent::Completed, this, &ThisClass::StopSprint);
 }
 
