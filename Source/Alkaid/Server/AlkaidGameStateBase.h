@@ -14,6 +14,8 @@ enum class ERoomState : uint8
 	Loading UMETA(DisplayName = "Loading"),
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLobbyInfoChanged);
+
 UCLASS()
 class ALKAID_API AAlkaidGameStateBase : public AGameStateBase
 {
@@ -22,20 +24,33 @@ class ALKAID_API AAlkaidGameStateBase : public AGameStateBase
 public:
 	AAlkaidGameStateBase();
 
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Room")
-	ERoomState RoomState;
+	UPROPERTY(BlueprintAssignable, Category = "Room")
+	FOnLobbyInfoChanged OnLobbyInfoChanged;
 
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Room")
-	AMyPlayerState* RoomLeaderPS;
+	UPROPERTY(ReplicatedUsing = OnRep_RoomState, BlueprintReadOnly, Category = "Room")
+	ERoomState RoomState;
 	
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Room")
+	UPROPERTY(ReplicatedUsing = OnRep_StartReady, BlueprintReadOnly, Category = "Room")
 	bool bStartReady;
 	
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Room")
+	UPROPERTY(ReplicatedUsing = OnRep_RoomCount, BlueprintReadOnly, Category = "Room")
 	int32 RoomPlayerCount;
 	
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Room")
+	UPROPERTY(ReplicatedUsing = OnRep_RoomCount, BlueprintReadOnly, Category = "Room")
 	int32 RoomReadyCount;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+protected:
+
+	UFUNCTION()
+	void OnRep_RoomState();
+	UFUNCTION()
+	void OnRep_StartReady();
+	UFUNCTION()
+	void OnRep_RoomCount();
+
+private:
+
+	void NotifyLobbyInfoChanged();
 };

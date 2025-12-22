@@ -56,7 +56,6 @@ void AAlkaidGameModeBase::ResetRoomOnReturn()
 	if (AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>())
 	{
 		GS->RoomState = ERoomState::Free;
-		GS->RoomLeaderPS = nullptr;
 		GS->bStartReady = false;
 		GS->RoomPlayerCount = 0;
 		GS->RoomReadyCount = 0;

@@ -27,9 +27,6 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Room")
 	void ServerSetReady(bool bNewReady);
 
-	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Room")
-	void ServerLeaderStart();
-
 	//Replicated 변수 등록.
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

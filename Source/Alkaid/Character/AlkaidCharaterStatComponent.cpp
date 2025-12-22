@@ -16,9 +16,7 @@ UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
 	SetIsReplicatedByDefault(true);
 
 	MaxStamina = 100.0f;
-	Stamina = MaxStamina;
 	NomalSpeed = 500.0f;
-	//CandleCount = 0.0f;
 	CandleCooldownSeconds = 3.0f;
 }
 
@@ -29,7 +27,7 @@ void UAlkaidCharaterStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, Stamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, MaxStamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, NomalSpeed);
-	//DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCount);
+	
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCoolDownEndTime);
 }
 
@@ -136,22 +134,6 @@ void UAlkaidCharaterStatComponent::UpdateHUDStamina()
 	}
 }
 
-//void UAlkaidCharaterStatComponent::AddCandleCount(float Amount)
-//{
-//	if (GetOwner() && GetOwner()->HasAuthority())
-//	{
-//		CandleCount =  FMath::Clamp(CandleCount + Amount, 0.0f, MaxCandleCount);
-//	}
-//}
-//
-//void UAlkaidCharaterStatComponent::SetCandleCount(float NewCandleCount)
-//{
-//	if (GetOwner() && GetOwner()->HasAuthority())
-//	{
-//		CandleCount = FMath::Clamp(NewCandleCount, 0.0f, MaxCandleCount);
-//	}
-//}
-
 bool UAlkaidCharaterStatComponent::IsCandleOnCooldown() const
 {
 	const UWorld* World = GetWorld();
@@ -200,6 +182,7 @@ void UAlkaidCharaterStatComponent::BeginPlay()
 
 void UAlkaidCharaterStatComponent::OnRep_Stamina()
 {
+	UE_LOG(LogTemp, Warning, TEXT("[CLIENT] OnRep_Stamina: %f"), Stamina);
 	ApplyStamina();
 }
 

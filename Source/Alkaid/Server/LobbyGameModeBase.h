@@ -35,7 +35,7 @@ protected:
 	void UpdateRoomCounts();
 
 	bool IsAllReadyInRoom(int32& OutRoomPlayers, int32& OutReadyPlayers) const;
-	bool IsRoomLeader(const AMyPlayerState* PS) const;
+	void AutoStart();
 	
 	void TravelToPuzzle();
 };

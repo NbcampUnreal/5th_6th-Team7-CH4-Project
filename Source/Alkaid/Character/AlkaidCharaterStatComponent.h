@@ -62,21 +62,7 @@ public:
 	// 스태미나 HUD 업데이트
 	void UpdateHUDStamina();
 
-	/*
-	//candle
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Candle")
-	//int32 CandleCount;
-
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Candle")
-	//int32 MaxCandleCount = 3;
-
-	//FORCEINLINE float GetCandleCount() const { return CandleCount; }
-
-	//void AddCandleCount(float Amount);//server
-
-	//void SetCandleCount(float NewCandleCount);//server
-	*/
-
+	
 
 	//candle cooltime
 	UPROPERTY(ReplicatedUsing=OnRep_CandleCoolDonwEndTime)
@@ -91,6 +77,24 @@ public:
 	float GetCandleCooldownRemainingTime() const;
 
 	void StartCandleCooldown();//server
+	
+	//sprint
+	UPROPERTY(EditDefaultsOnly, Replicated, Category = "AlkaidCharacter|Speed")
+	float BaseWalkSpeed = 500;
+
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "AlkaidCharacter|Speed")
+	float SpeedBonus = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|SprintSpeed")
+	float SprintMultiplier = 1.5f;
+
+	FORCEINLINE float GetSprintSpeed() const { return BaseWalkSpeed * SprintMultiplier + SpeedBonus; }
+
+	FORCEINLINE float GetFinalMoveSpeed(bool bSprinting) const
+	{
+		const float Base = GetSprintSpeed();
+		return bSprinting ? Base * SprintMultiplier : Base;
+	}
 
 
 protected:
