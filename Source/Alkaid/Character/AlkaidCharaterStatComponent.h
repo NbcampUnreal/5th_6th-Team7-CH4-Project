@@ -8,7 +8,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AlkaidCharaterStatComponent.generated.h"
 
-
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float/*Current*/, float/*Max*/);
 
 
@@ -59,20 +58,11 @@ public:
 	void AddNomalSpeed(float Amount);//server
 
 	void ApplySpeed();
-	                                                                         
+	                  
+	// 스태미나 HUD 업데이트
+	void UpdateHUDStamina();
 
-	//candle
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Candle")
-	float CandleCount;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Candle")
-	float MaxCandleCount = 3.0f;
-
-	FORCEINLINE float GetCandleCount() const { return CandleCount; }
-
-	void AddCandleCount(int32 Amount);//server
-
-	void SetCandleCount(float NewCandleCount);//server
+	
 
 	//candle cooltime
 	UPROPERTY(ReplicatedUsing=OnRep_CandleCoolDonwEndTime)
@@ -118,6 +108,15 @@ protected:
 	void OnRep_Speed();	
 	UFUNCTION()
 	void OnRep_CandleCoolDonwEndTime();
+
+
+private:
+	UPROPERTY()
+	class AAlkaidPlayerController* AKPlayerController;
+
+	UPROPERTY()
+	class AAlkaidCharacter* AKCharacter;
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

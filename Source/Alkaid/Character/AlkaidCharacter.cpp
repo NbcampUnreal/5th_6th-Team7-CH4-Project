@@ -13,6 +13,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Components/PrimitiveComponent.h"
+#include "Items/AKComponents/ItemComponent.h"
+#include "Items/AKComponents/BuffComponent.h"
 
 // Sets default values
 AAlkaidCharacter::AAlkaidCharacter()
@@ -42,6 +44,14 @@ AAlkaidCharacter::AAlkaidCharacter()
 	StatComponent->SetIsReplicated(true);
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 	EquipmentComponent->SetIsReplicated(true);
+
+	// ItemComponent 생성및 초기화
+	ItemComponent = CreateDefaultSubobject<UItemComponent>(TEXT("ItemComponent"));
+	ItemComponent->SetIsReplicated(true);
+
+	// BuffComponent 생성및 초기화
+	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	BuffComponent->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned
@@ -49,18 +59,11 @@ void AAlkaidCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	/*UE_LOG(LogTemp, Warning, TEXT("[BEGINPLAY] Local=%d Controller=%s"),
-		IsLocallyControlled(),
-		*GetNameSafe(GetController())
-	);*/
+
 
 	if (IsLocallyControlled() == true)
 	{
 		APlayerController* PC = Cast<APlayerController>(GetController());
-		/*UE_LOG(LogTemp, Warning, TEXT("[BEGINPLAY] PC=%s LocalPlayer=%s"),
-			*GetNameSafe(PC),
-			PC ? *GetNameSafe(PC->GetLocalPlayer()) : TEXT("null")
-		);*/
 		checkf(IsValid(PC) == true, TEXT("PlayerController is invalid."));
 
 		UEnhancedInputLocalPlayerSubsystem* EILPS = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
@@ -75,7 +78,6 @@ void AAlkaidCharacter::BeginPlay()
 		}
 	}
 	
-	
 }
 
 
@@ -88,22 +90,31 @@ void AAlkaidCharacter::PostInitializeComponents()
 		StatComponent->ApplySpeed();
 		StatComponent->ApplyStamina();
 	}
+	if (ItemComponent)
+	{
+		ItemComponent->AKCharacter = this;
+	}
+	if (BuffComponent)
+	{
+		BuffComponent->AKCharacter = this;
+		BuffComponent->AKStatComp = StatComponent;
+	}
 }
 
 void AAlkaidCharacter::ServerUseCandle_Implementation()
 {
-	if (!StatComponent)
+	if (!StatComponent && !ItemComponent)
 		return; 
 	
-	if(StatComponent->GetCandleCount() <= 0)
+	if(ItemComponent->GetCandle() <= 0)
 		return;
 
 	if (StatComponent->IsCandleOnCooldown())
 		return;
-	
+
 	StatComponent->StartCandleCooldown();
-	StatComponent->AddCandleCount(-1);
-	StatComponent->AddStamina(20);
+	ItemComponent->SpendRound();
+	StatComponent->AddStamina(20.0f);
 
 	/*UE_LOG(LogTemp, Warning, TEXT("[SERVER] After Use: Stamina=%f/%f Candle=%f EndTime=%f"),
 		StatComponent->GetStamina(),
@@ -176,6 +187,7 @@ void AAlkaidCharacter::HandleUsingItemInput(const FInputActionValue& InValue)
 
 void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
 {
+	
 	/*UE_LOG(LogTemp, Warning, TEXT("[INPUT] HandleUsingCandleInput fired. Local=%d HasAuth=%d Role=%d Controller=%s"),
 		IsLocallyControlled(),
 		HasAuthority(),
@@ -187,7 +199,8 @@ void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
 	{
 		return;
 	}
-	if(StatComponent->GetCandleCount() <= 0)
+	
+	if(ItemComponent->GetCandle() <= 0)
 	{
 		return;
 	}
@@ -196,7 +209,6 @@ void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
 		ServerUseCandle();
 		return;
 	}
-	
 	ServerUseCandle();
 }
 

@@ -4,6 +4,8 @@
 #include "Character/AlkaidCharaterStatComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Alkaid/Controller/AlkaidPlayerController.h"
+#include "Alkaid/Character/AlkaidCharacter.h"
 
 // Sets default values for this component's properties
 UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
@@ -25,7 +27,7 @@ void UAlkaidCharaterStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, Stamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, MaxStamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, NomalSpeed);
-	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCount);
+	
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCoolDownEndTime);
 }
 
@@ -118,19 +120,17 @@ void UAlkaidCharaterStatComponent::ApplySpeed()
 	}
 }
 
-void UAlkaidCharaterStatComponent::AddCandleCount(int32 Amount)
+void UAlkaidCharaterStatComponent::UpdateHUDStamina()
 {
-	if (GetOwner() && GetOwner()->HasAuthority())
+	AKCharacter = AKCharacter == nullptr ? Cast<AAlkaidCharacter>(GetOwner()) : AKCharacter;
+	if (AKCharacter)
 	{
-		CandleCount =  FMath::Clamp(CandleCount + Amount, 0.0f, MaxCandleCount);
-	}
-}
-
-void UAlkaidCharaterStatComponent::SetCandleCount(float NewCandleCount)
-{
-	if (GetOwner() && GetOwner()->HasAuthority())
-	{
-		CandleCount = FMath::Clamp(NewCandleCount, 0.0f, MaxCandleCount);
+		AKPlayerController = AKPlayerController == nullptr 
+			? Cast<AAlkaidPlayerController>(AKCharacter->Controller) : AKPlayerController;
+		if (AKPlayerController)
+		{
+			AKPlayerController->SetHUDStamina(Stamina, MaxStamina);
+		}
 	}
 }
 
@@ -156,6 +156,7 @@ void UAlkaidCharaterStatComponent::StartCandleCooldown()
 }
 
 
+
 // Called when the game starts
 void UAlkaidCharaterStatComponent::BeginPlay()
 {
@@ -164,10 +165,19 @@ void UAlkaidCharaterStatComponent::BeginPlay()
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		Stamina = MaxStamina;
-		CandleCount = 0.0f;
 	}
 	ApplyStamina();
 	ApplySpeed();
+
+	if (!AKCharacter)
+	{
+		AKCharacter = Cast<AAlkaidCharacter>(GetOwner());
+	}
+	AKPlayerController = Cast<AAlkaidPlayerController>(AKCharacter->Controller);
+	if (AKPlayerController)
+	{
+		AKPlayerController->SetHUDStamina(Stamina, MaxStamina);
+	}
 }
 
 void UAlkaidCharaterStatComponent::OnRep_Stamina()
