@@ -14,9 +14,7 @@ UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
 	SetIsReplicatedByDefault(true);
 
 	MaxStamina = 100.0f;
-	Stamina = MaxStamina;
 	NomalSpeed = 500.0f;
-	CandleCount = 0.0f;
 	CandleCooldownSeconds = 3.0f;
 }
 
@@ -120,7 +118,7 @@ void UAlkaidCharaterStatComponent::ApplySpeed()
 	}
 }
 
-void UAlkaidCharaterStatComponent::AddCandleCount(float Amount)
+void UAlkaidCharaterStatComponent::AddCandleCount(int32 Amount)
 {
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
@@ -158,7 +156,6 @@ void UAlkaidCharaterStatComponent::StartCandleCooldown()
 }
 
 
-
 // Called when the game starts
 void UAlkaidCharaterStatComponent::BeginPlay()
 {
@@ -167,6 +164,7 @@ void UAlkaidCharaterStatComponent::BeginPlay()
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		Stamina = MaxStamina;
+		CandleCount = 0.0f;
 	}
 	ApplyStamina();
 	ApplySpeed();
@@ -174,6 +172,7 @@ void UAlkaidCharaterStatComponent::BeginPlay()
 
 void UAlkaidCharaterStatComponent::OnRep_Stamina()
 {
+	UE_LOG(LogTemp, Warning, TEXT("[CLIENT] OnRep_Stamina: %f"), Stamina);
 	ApplyStamina();
 }
 
