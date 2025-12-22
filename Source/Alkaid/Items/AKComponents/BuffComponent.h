@@ -26,6 +26,10 @@ public:
 	// 회복 중단 (범위 기반 아이템용)
 	void StopHealing();
 
+	// 속도 버프
+	void BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime);
+	// 초기 속도 설정 함수 - 캐릭터에서 호출하기 위해
+	void SetInitialSpeeds(float BaseSpeed, float CrouchSpeed);
 
 protected:
 	
@@ -50,7 +54,20 @@ private:
 	float HealingRate = 0;
 	float AmountToHeal = 0.f;
 
+	/*
+	=====================	Speed buff	=====================
+	*/
+	FTimerHandle SpeedBuffTiemr;
+	
+	// 초기 스피드
+	float InitialBaseSpeed;
+	float InitialCrouchSpeed;
+	
+	void ResetSpeeds();
 
+	// 서버와 클라의 스피드 차이를 없애기위한 RPC 함수
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSpeedBuff(float BaseSpeed, float CrouchSpeed);
 
 public:	
 	
