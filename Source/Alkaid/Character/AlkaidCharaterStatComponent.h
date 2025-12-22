@@ -8,7 +8,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AlkaidCharaterStatComponent.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float/*Current*/, float/*Max*/);
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -22,7 +21,6 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	FOnStaminaChanged OnStaminaChanged;
 
 	// Stamina
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Stamina, Category = "AlkaidCharacter|Stamina")

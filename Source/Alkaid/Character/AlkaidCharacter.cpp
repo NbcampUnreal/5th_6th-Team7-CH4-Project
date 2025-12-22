@@ -282,7 +282,7 @@ void AAlkaidCharacter::Tick(float DeltaTime)
 		const bool bIsMoving = Speed2D > 3.0f;
 		if (bIsMoving)
 		{
-			StatComponent->AddStamina(-1 * DeltaTime);
+			StatComponent->AddStamina(-6 * DeltaTime);
 			if (StatComponent->GetStamina() <= 0.0f)
 			{
 				bIsSprinting = false;

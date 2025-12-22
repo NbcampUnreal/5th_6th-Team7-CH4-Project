@@ -27,7 +27,6 @@ void UAlkaidCharaterStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, Stamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, MaxStamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, NomalSpeed);
-	
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCoolDownEndTime);
 }
 
@@ -36,6 +35,8 @@ void UAlkaidCharaterStatComponent::AddStamina(float Amount)
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		Stamina = FMath::Clamp(Stamina + Amount, 0.0f, MaxStamina);
+
+		ApplyStamina();
 	}
 }
 
@@ -61,6 +62,7 @@ void UAlkaidCharaterStatComponent::AddMaxStamina(float Amount)
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		MaxStamina = FMath::Max(0.0f, MaxStamina + Amount);
+		ApplyStamina();
 	}
 }
 
@@ -79,8 +81,11 @@ void UAlkaidCharaterStatComponent::ApplyStamina()
 			return;
 		if(!PawnOwner->IsLocallyControlled())
 			return;	
-	
-		OnStaminaChanged.Broadcast(Stamina, MaxStamina);
+		AAlkaidPlayerController* PC = Cast<AAlkaidPlayerController>(PawnOwner->GetController());
+		if(PC)
+		{
+			PC->SetHUDStamina(Stamina, MaxStamina);
+		}
 }
 
 void UAlkaidCharaterStatComponent::SetNomalSpeed(float NewNomalSpeed)
