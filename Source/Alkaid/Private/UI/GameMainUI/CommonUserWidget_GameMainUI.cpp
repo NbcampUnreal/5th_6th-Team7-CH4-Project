@@ -6,7 +6,9 @@
 #include "Math/Color.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
-
+//SeverGameMode
+#include "Server/AlkaidGameModeBase.h"
+#include "UI/PlayerController_LobbyMapUI.h"
 
 void UCommonUserWidget_GameMainUI::NativeConstruct()
 {
@@ -57,9 +59,20 @@ void UCommonUserWidget_GameMainUI::OnButtonYesUnhovered()
 
 void UCommonUserWidget_GameMainUI::OnButtonYesClicked()
 {
+    UE_LOG(LogTemp, Warning, TEXT("Yes Button Clicked!"));
+
     if (ClickSound)
     {
         UGameplayStatics::PlaySound2D(this, ClickSound);
+    }
+
+    this->RemoveFromParent();
+
+    APlayerController_LobbyMapUI* MapLobby = Cast<APlayerController_LobbyMapUI>(GetOwningPlayer());
+
+    if (MapLobby)
+    {
+        MapLobby->RequestTravelToLobby();
     }
 }
 
