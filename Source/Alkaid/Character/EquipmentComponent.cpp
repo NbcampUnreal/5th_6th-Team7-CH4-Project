@@ -13,6 +13,10 @@ UEquipmentComponent::UEquipmentComponent()
 	// ...
 }
 
+void UEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+}
+
 
 // Called when the game starts
 void UEquipmentComponent::BeginPlay()
