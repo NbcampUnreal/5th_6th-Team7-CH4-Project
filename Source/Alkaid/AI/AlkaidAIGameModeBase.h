@@ -14,4 +14,7 @@ class ALKAID_API AAlkaidAIGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+	AAlkaidAIGameModeBase();
+
 };
