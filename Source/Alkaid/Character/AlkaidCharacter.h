@@ -63,10 +63,16 @@ public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 
 	//Sprint
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_IsSprinting)
 	bool bIsSprinting = false;
 
+	UFUNCTION()
+	void OnRep_IsSprinting();
+
 	void SprintSpeed_Server();
+
+	FORCEINLINE bool IsSprinting() const { return bIsSprinting; }
+
 	//server
 	UFUNCTION(Server, Reliable)
 	void ServerUseCandle(); 

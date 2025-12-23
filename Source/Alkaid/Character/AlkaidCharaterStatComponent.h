@@ -83,17 +83,19 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated, Category = "AlkaidCharacter|Speed")
 	float SpeedBonus = 0.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|SprintSpeed")
+	UPROPERTY(EditDefaultsOnly, Replicated, BlueprintReadOnly, Category = "AlkaidCharacter|SprintSpeed")
 	float SprintMultiplier = 1.5f;
 
-	FORCEINLINE float GetSprintSpeed() const { return BaseWalkSpeed * SprintMultiplier + SpeedBonus; }
+	FORCEINLINE float GetWalkSpeed() const
+	{
+		return BaseWalkSpeed + SpeedBonus;
+	}
 
 	FORCEINLINE float GetFinalMoveSpeed(bool bSprinting) const
 	{
-		const float Base = GetSprintSpeed();
-		return bSprinting ? Base * SprintMultiplier : Base;
+		const float Walk = GetWalkSpeed();
+		return bSprinting ? Walk * SprintMultiplier : Walk;
 	}
-
 
 protected:
 	// Called when the game starts
