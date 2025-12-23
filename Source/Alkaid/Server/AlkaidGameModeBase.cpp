@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerController.h"
 
 void AAlkaidGameModeBase::ReturnToLobby()
 {
