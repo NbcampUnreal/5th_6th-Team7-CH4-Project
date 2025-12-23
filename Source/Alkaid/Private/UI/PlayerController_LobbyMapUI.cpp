@@ -27,16 +27,8 @@ void APlayerController_LobbyMapUI::RequestTravelToLobby()
 void APlayerController_LobbyMapUI::Server_TravelToLobby_Implementation()
 {
     if (!HasAuthority()) return;
-
-    UWorld* World = GetWorld();
-    if (World)
-    {
-        AAlkaidGameModeBase* MoveMap = Cast<AAlkaidGameModeBase>(World->GetAuthGameMode());
-        if (MoveMap)
-        {
-            MoveMap->TravelTo(MoveMap->LobbyMapPath);
-        }
-    }
+    
+    ClientTravel(FString(TEXT("125.183.170.242:7777")),ETravelType::TRAVEL_Absolute);
 }
 
 void APlayerController_LobbyMapUI::BeginPlay()
