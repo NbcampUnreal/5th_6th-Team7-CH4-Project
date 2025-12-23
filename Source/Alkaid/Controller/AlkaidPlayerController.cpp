@@ -6,6 +6,7 @@
 #include "Alkaid/HUD/CharacterOverlay.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "HUD/StaminaWidget_UI.h"
 
 
 void AAlkaidPlayerController::BeginPlay()
@@ -18,19 +19,17 @@ void AAlkaidPlayerController::BeginPlay()
 void AAlkaidPlayerController::SetHUDStamina(float Stamina, float MaxStamina)
 {
 	AKHUD = AKHUD == nullptr ? Cast<AAKHUD>(GetHUD()) : AKHUD;
-
 	bool bHUDValid = AKHUD &&
 		AKHUD->CharacterOverlay &&
 		AKHUD->CharacterOverlay->StaminaBar &&
 		AKHUD->CharacterOverlay->StaminaText;
-
 	if (bHUDValid)
 	{
 		const float StaminaPercent = Stamina / MaxStamina;
 		AKHUD->CharacterOverlay->StaminaBar->SetPercent(StaminaPercent);
-
 		FString StaminaText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Stamina), FMath::CeilToInt(MaxStamina));
 		AKHUD->CharacterOverlay->StaminaText->SetText(FText::FromString(StaminaText));
+		AKHUD->CharacterOverlay->StaminaWidget->UpdateStaminaBar(Stamina, MaxStamina); // 추가
 	}
 }
 

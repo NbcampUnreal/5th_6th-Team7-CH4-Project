@@ -27,6 +27,9 @@ void UAlkaidCharaterStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, Stamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, MaxStamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, NomalSpeed);
+	DOREPLIFETIME(UAlkaidCharaterStatComponent, BaseWalkSpeed);
+	DOREPLIFETIME(UAlkaidCharaterStatComponent, SpeedBonus);
+	DOREPLIFETIME(UAlkaidCharaterStatComponent, SprintMultiplier);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCoolDownEndTime);
 }
 
@@ -116,13 +119,19 @@ void UAlkaidCharaterStatComponent::AddNomalSpeed(float Amount)
 
 void UAlkaidCharaterStatComponent::ApplySpeed()
 {
-	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
+	ACharacter* Character = Cast<ACharacter>(GetOwner());
+	if (!Character) return;
+
+	UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement();
+	if (!MoveComp) return;
+
+	bool bSprinting = false;
+	if (AAlkaidCharacter* AC = Cast<AAlkaidCharacter>(GetOwner()))
 	{
-		if (UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement())
-		{
-			MoveComp->MaxWalkSpeed = NomalSpeed;
-		}
+		bSprinting = AC->IsSprinting();
 	}
+
+	MoveComp->MaxWalkSpeed = GetFinalMoveSpeed(bSprinting);
 }
 
 void UAlkaidCharaterStatComponent::UpdateHUDStamina()
@@ -160,8 +169,6 @@ void UAlkaidCharaterStatComponent::StartCandleCooldown()
 	CandleCoolDownEndTime = UGameplayStatics::GetTimeSeconds(GetWorld()) + CandleCooldownSeconds;
 }
 
-
-
 // Called when the game starts
 void UAlkaidCharaterStatComponent::BeginPlay()
 {
@@ -187,7 +194,7 @@ void UAlkaidCharaterStatComponent::BeginPlay()
 
 void UAlkaidCharaterStatComponent::OnRep_Stamina()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[CLIENT] OnRep_Stamina: %f"), Stamina);
+	//UE_LOG(LogTemp, Warning, TEXT("[CLIENT] OnRep_Stamina: %f"), Stamina);
 	ApplyStamina();
 }
 

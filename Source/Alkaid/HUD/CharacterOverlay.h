@@ -6,9 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "CharacterOverlay.generated.h"
 
-/**
- * 
- */
+class UStaminaWidget_UI;
+
 UCLASS()
 class ALKAID_API UCharacterOverlay : public UUserWidget
 {
@@ -23,5 +22,8 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* CandleAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	UStaminaWidget_UI* StaminaWidget;
 
 };
