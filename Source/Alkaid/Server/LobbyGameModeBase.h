@@ -25,17 +25,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void CheckStartReady();
 
-	void LeaderStart(AMyPlayerState* RequestPS);
+	//void LeaderStart(AMyPlayerState* RequestPS);
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
 
 protected:
 	void EnsureRoomLeader();
-	void UpdateRoomCounts();
+	//void UpdateRoomCounts();
 
 	bool IsAllReadyInRoom(int32& OutRoomPlayers, int32& OutReadyPlayers) const;
-	void AutoStart();
+	//void AutoStart();
 	
 	void TravelToPuzzle();
 };
