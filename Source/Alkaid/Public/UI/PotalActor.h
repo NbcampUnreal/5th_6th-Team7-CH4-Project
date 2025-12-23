@@ -37,4 +37,7 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void PlayInteractionWidgetAnim();
 };
