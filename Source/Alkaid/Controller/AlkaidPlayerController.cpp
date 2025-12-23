@@ -29,7 +29,7 @@ void AAlkaidPlayerController::SetHUDStamina(float Stamina, float MaxStamina)
 		AKHUD->CharacterOverlay->StaminaBar->SetPercent(StaminaPercent);
 		FString StaminaText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Stamina), FMath::CeilToInt(MaxStamina));
 		AKHUD->CharacterOverlay->StaminaText->SetText(FText::FromString(StaminaText));
-		//AKHUD->CharacterOverlay->StaminaWidget->UpdateStaminaBar(Stamina, MaxStamina); // 추가
+		AKHUD->CharacterOverlay->StaminaWidget->UpdateStaminaBar(Stamina, MaxStamina); // 추가
 	}
 }
 
