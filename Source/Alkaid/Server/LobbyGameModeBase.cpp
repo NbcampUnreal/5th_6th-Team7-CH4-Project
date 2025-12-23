@@ -51,7 +51,6 @@ void ALobbyGameModeBase::JoinRoom(AMyPlayerState* PS)
 		GS->RoomState = ERoomState::Match;
 	}
 
-	//UpdateRoomCounts();
 	CheckStartReady();
 	UE_LOG(LogTemp, Warning, TEXT("JoinRoom 완료: %s (RoomPlayers=%d, Ready=%d, StartReady=%d)"),
 		*PS->GetPlayerName(),
@@ -87,7 +86,6 @@ void ALobbyGameModeBase::LeaveRoom(AMyPlayerState* PS)
 	PS->bReady = false;
 
 	EnsureRoomLeader();
-	//UpdateRoomCounts();
 	CheckStartReady();
 }
 
@@ -125,33 +123,10 @@ void ALobbyGameModeBase::CheckStartReady()
 	}
 }
 
-//void ALobbyGameModeBase::LeaderStart(AMyPlayerState* RequestPS)
-//{
-//	if (!HasAuthority())
-//	{
-//		return;
-//	}
-//
-//	AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>();
-//	if (!GS || !RequestPS)
-//	{
-//		return;
-//	}
-//
-//	CheckStartReady();
-//	if (!GS->bStartReady)
-//	{
-//		return;
-//	}
-//
-//	TravelToPuzzle();
-//}
-
 void ALobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	//UpdateRoomCounts();
 	CheckStartReady();
 }
 
@@ -168,7 +143,6 @@ void ALobbyGameModeBase::Logout(AController* Exiting)
 	}
 
 	EnsureRoomLeader();
-	//UpdateRoomCounts();
 	CheckStartReady();
 }
 
@@ -194,19 +168,6 @@ void ALobbyGameModeBase::EnsureRoomLeader()
 
 	GS->RoomState = ERoomState::Free;
 }
-
-//void ALobbyGameModeBase::UpdateRoomCounts()
-//{
-//	if (AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>())
-//	{
-//		int32 RoomPlayers = 0;
-//		int32 ReadyPlayers = 0;
-//		IsAllReadyInRoom(RoomPlayers, ReadyPlayers);
-//
-//		GS->RoomPlayerCount = RoomPlayers;
-//		GS->RoomReadyCount = ReadyPlayers;
-//	}
-//}
 
 bool ALobbyGameModeBase::IsAllReadyInRoom(int32& OutRoomPlayers, int32& OutReadyPlayers) const
 {
@@ -240,39 +201,6 @@ bool ALobbyGameModeBase::IsAllReadyInRoom(int32& OutRoomPlayers, int32& OutReady
 	return(OutRoomPlayers > 0 && OutReadyPlayers == OutRoomPlayers);
 }
 
-//void ALobbyGameModeBase::AutoStart()
-//{
-//	if (!HasAuthority())
-//	{
-//		return;
-//	}
-//
-//	AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>();
-//	if (!GS)
-//	{
-//		return;
-//	}
-//
-//	if (GS->RoomState == ERoomState::Loading)
-//	{
-//		return;
-//	}
-//
-//	int32 RoomPlayers = 0;
-//	int32 ReadyPlayers = 0;
-//	const bool bAllReady = IsAllReadyInRoom(RoomPlayers, ReadyPlayers);
-//
-//	const bool bCanStart = (GS->RoomState == ERoomState::Match) && (RoomPlayers >= MinPlayers) && bAllReady;
-//
-//	GS->bStartReady = bCanStart;
-//	GS->RoomPlayerCount = RoomPlayers;
-//	GS->RoomReadyCount = ReadyPlayers;
-//
-//	if (bCanStart)
-//	{
-//		TravelToPuzzle();
-//	}
-//}
 
 void ALobbyGameModeBase::TravelToPuzzle()
 {
