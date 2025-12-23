@@ -17,6 +17,14 @@ class ALKAID_API AAlkaidAIController : public AAIController
 public:
 	AAlkaidAIController();
 
+	
+
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	TObjectPtr<class UBehaviorTree>BehaviorTreeAsset;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	TObjectPtr<class UBlackboardData>BlackboardAsset;
 };
