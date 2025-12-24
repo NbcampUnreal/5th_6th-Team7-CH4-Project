@@ -2,6 +2,7 @@
 #include "Server/AlkaidGameStateBase.h"
 #include "MyPlayerState.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "Engine/World.h"
 
 ALobbyGameModeBase::ALobbyGameModeBase()
@@ -132,15 +133,13 @@ void ALobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 
 void ALobbyGameModeBase::Logout(AController* Exiting)
 {
-	AMyPlayerState* ExitingPS = Exiting ? Exiting->GetPlayerState<AMyPlayerState>() : nullptr;
-
-	Super::Logout(Exiting);
-
-	if (ExitingPS)
+	if (AMyPlayerState* ExitingPS = Exiting ? Exiting->GetPlayerState<AMyPlayerState>() : nullptr)
 	{
 		ExitingPS->bInRoom = false;
 		ExitingPS->bReady = false;
 	}
+
+	Super::Logout(Exiting);
 
 	EnsureRoomLeader();
 	CheckStartReady();
@@ -214,6 +213,27 @@ void ALobbyGameModeBase::TravelToPuzzle()
 		GS->RoomState = ERoomState::Loading;
 		GS->bStartReady = false;
 	}
+	
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
 
-	TravelTo(PuzzleMapPath);
+	for(FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (!PC)
+		{
+			continue;
+		}
+
+		AMyPlayerState* MyPS = PC->GetPlayerState<AMyPlayerState>();
+		if (!MyPS || !MyPS->bInRoom || !MyPS->bReady)
+		{
+			continue;
+		}
+
+		PC->ClientTravel(PuzzleMapPath, ETravelType::TRAVEL_Absolute);
+	}
 }
