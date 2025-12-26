@@ -13,26 +13,22 @@ void AAlkaidGameModeBase::ReturnToLobby()
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Return to Lobby"));
-	ResetRoomOnReturn();
-	TravelTo(LobbyMapPath);
-}
-
-void AAlkaidGameModeBase::TravelTo(const FString& MapPath)
-{
 	UWorld* World = GetWorld();
 	if (!World)
 	{
 		return;
 	}
 
-	if (MapPath.IsEmpty())
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
-		return;
-	}
+		APlayerController* PC = It->Get();
+		if (!PC)
+		{
+			continue;
+		}
 
-	UE_LOG(LogTemp, Warning, TEXT("TravelTo : %s"), *MapPath);
-	World->ServerTravel(*MapPath);
+		PC->ClientTravel(LobbyMapPath, ETravelType::TRAVEL_Absolute);
+	}
 }
 
 void AAlkaidGameModeBase::ResetRoomOnReturn()

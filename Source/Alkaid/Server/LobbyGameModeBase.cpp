@@ -2,6 +2,7 @@
 #include "Server/AlkaidGameStateBase.h"
 #include "MyPlayerState.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "Engine/World.h"
 
 ALobbyGameModeBase::ALobbyGameModeBase()
@@ -102,16 +103,11 @@ void ALobbyGameModeBase::CheckStartReady()
 		return;
 	}
 
-	if (GS->RoomState == ERoomState::Loading)
-	{
-		return;
-	}
-
 	int32 RoomPlayers = 0;
 	int32 ReadyPlayers = 0;
-	const bool bAllReady = IsAllReadyInRoom(RoomPlayers, ReadyPlayers);
+	IsAllReadyInRoom(RoomPlayers, ReadyPlayers);
 
-	const bool bCanStart = (GS->RoomState == ERoomState::Match) && (RoomPlayers >= MinPlayers) && bAllReady;
+	const bool bCanStart = (GS->RoomState == ERoomState::Match) && (ReadyPlayers >= MinPlayers);
 
 	GS->bStartReady = bCanStart;
 	GS->RoomPlayerCount = RoomPlayers;
@@ -132,15 +128,13 @@ void ALobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 
 void ALobbyGameModeBase::Logout(AController* Exiting)
 {
-	AMyPlayerState* ExitingPS = Exiting ? Exiting->GetPlayerState<AMyPlayerState>() : nullptr;
-
-	Super::Logout(Exiting);
-
-	if (ExitingPS)
+	if (AMyPlayerState* ExitingPS = Exiting ? Exiting->GetPlayerState<AMyPlayerState>() : nullptr)
 	{
 		ExitingPS->bInRoom = false;
 		ExitingPS->bReady = false;
 	}
+
+	Super::Logout(Exiting);
 
 	EnsureRoomLeader();
 	CheckStartReady();
@@ -208,12 +202,68 @@ void ALobbyGameModeBase::TravelToPuzzle()
 	{
 		return;
 	}
-
-	if (AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>())
+	
+	UWorld* World = GetWorld();
+	if (!World)
 	{
-		GS->RoomState = ERoomState::Loading;
-		GS->bStartReady = false;
+		return;
 	}
 
-	TravelTo(PuzzleMapPath);
+	TArray<APlayerController*> ReadyPC;
+
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (!PC)
+		{
+			continue;
+		}
+
+		AMyPlayerState* MyPS = PC->GetPlayerState<AMyPlayerState>();
+		if (!MyPS)
+		{
+			continue;
+		}
+		if (MyPS->bInRoom && MyPS->bReady)
+		{
+			ReadyPC.Add(PC);
+		}
+	}
+	if (ReadyPC.Num() < MinPlayers)
+	{
+		return;
+	}
+
+	ReadyPC.Sort([](const APlayerController& A, const APlayerController& B)
+	{
+		const APlayerState* PSA = A.PlayerState;
+		const APlayerState* PSB = B.PlayerState;
+		const int32 IdA = PSA ? PSA->GetPlayerId() : INT32_MAX;
+		const int32 IdB = PSB ? PSB->GetPlayerId() : INT32_MAX;
+		return IdA < IdB;
+	});
+
+	TArray<APlayerController*> ToTravel;
+	ToTravel.Reserve(MinPlayers);
+	for (int32 i = 0; i < MinPlayers; ++i)
+	{
+		ToTravel.Add(ReadyPC[i]);
+	}
+
+	for (APlayerController* PC : ToTravel)
+	{
+		if (AMyPlayerState* MyPS = PC->GetPlayerState<AMyPlayerState>())
+		{
+			MyPS->bInRoom = false;
+			MyPS->bReady = false;
+		}
+	}
+
+	EnsureRoomLeader();
+	CheckStartReady();
+
+	for (APlayerController* PC : ToTravel)
+	{
+		PC->ClientTravel(PuzzleMapPath, ETravelType::TRAVEL_Absolute);
+	}
 }

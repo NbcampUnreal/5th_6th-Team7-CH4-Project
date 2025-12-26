@@ -149,12 +149,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "StaminaWidget")
 	TSubclassOf<UUserWidget> StaminaWidget;
 private:
-	UPROPERTY()
-	TObjectPtr<AActor> HeldItemRight;
-
-	UPROPERTY()
-	TObjectPtr<AActor> HeldItemLeft;
-
+	
 	UPROPERTY()
 	TObjectPtr<AActor> Pushing;
 
