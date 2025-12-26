@@ -13,6 +13,11 @@ UEquipmentComponent::UEquipmentComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
 	
+	UE_LOG(LogTemp, Warning, TEXT("TEST LOG"));
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("TEST SCREEN LOG"));
+	}
 }
 
 void UEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -87,6 +92,36 @@ void UEquipmentComponent::ServerUnequipAllItems_Implementation()
 	ApplyAttach();
 }
 
+void UEquipmentComponent::ServerTryInteract_Implementation()
+{
+	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
+	if(!OwnerAC)
+		return;
+
+	if (HeldItemRight || HeldItemLeft)
+	{
+		ServerDropItem();
+		return;
+	}
+	FVector Start = OwnerAC->GetPawnViewLocation();
+	FVector End = Start + (OwnerAC->GetControlRotation().Vector() * 200.0f);
+
+	FHitResult Hit;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(InteractTrace), false, OwnerAC);
+
+	if (!GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+		return;
+
+	AActor* Candidate = Hit.GetActor();
+	if (!Candidate) return;
+
+	const EEquipmentType NewType = DetermineEquipmentType(Candidate);
+	if(NewType == EEquipmentType::None)
+		return;
+
+	
+}
+
 void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 {
 	if(!ItemSlot)
@@ -116,14 +151,22 @@ void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 
 void UEquipmentComponent::RequestInteractToggle(AActor* CandidateItem)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[Equip] RequestInteractToggle called. Owner=%s HasAuth=%d Candidate=%s"),
+		GetOwner() ? *GetOwner()->GetName() : TEXT("NULL"),
+		GetOwner() ? (int32)GetOwner()->HasAuthority() : -1,
+		CandidateItem ? *CandidateItem->GetName() : TEXT("NULL"));
+
 	if (!GetOwner())
 		return;
 
 	if (!GetOwner()->HasAuthority())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[Equip] Calling ServerToggleInteract RPC"));
 		ServerToggleInteract(CandidateItem);
 		return;
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[Equip] On Server, calling ServerToggleInteract directly"));
 	ServerToggleInteract(CandidateItem);
 }
 
@@ -244,13 +287,25 @@ EEquipmentType UEquipmentComponent::DetermineEquipmentType(AActor* Item) const
 {
 	if (!Item) return EEquipmentType::None;
 
+	UE_LOG(LogTemp, Warning, TEXT("[Equip] DetermineEquipmentType Item=%s Class=%s"),
+		*Item->GetName(), *Item->GetClass()->GetName());
+
+
 	for(const auto& Pair : ItemClassToEquipmentType)
 	{
+		if (Pair.Key)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("  - Check Key=%s  IsA=%d"),
+				*Pair.Key->GetName(), Item->IsA(Pair.Key));
+		}
+
 		if (Pair.Key &&Item->IsA(Pair.Key))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("  => MATCH Type=%d"), (int32)Pair.Value);
 			return Pair.Value;
 		}
 	}
+	UE_LOG(LogTemp, Warning, TEXT("  => NO MATCH"));
 	return EEquipmentType::None;
 }
 

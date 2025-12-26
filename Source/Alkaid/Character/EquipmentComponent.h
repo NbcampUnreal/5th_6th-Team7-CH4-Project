@@ -51,6 +51,9 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipLeftItem(AActor* Item, EEquipmentType NewType);
+	
+	UFUNCTION(Server, Reliable)
+	void ServerTryInteract();
 
 	UFUNCTION(Server, Reliable)
 	void ServerUnequipAllItems();
