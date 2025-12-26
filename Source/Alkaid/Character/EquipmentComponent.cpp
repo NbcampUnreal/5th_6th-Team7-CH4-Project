@@ -2,6 +2,7 @@
 
 #include "Character/EquipmentComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Components/PrimitiveComponent.h"
 #include "Alkaid/Character/AlkaidCharacter.h"
 
 // Sets default values for this component's properties
@@ -11,7 +12,7 @@ UEquipmentComponent::UEquipmentComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
-	EquipmentType = EEquipmentType::None;
+	
 }
 
 void UEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -36,32 +37,131 @@ void UEquipmentComponent::OnRep_HeldItems()
 
 void UEquipmentComponent::ServerEquipRightItem_Implementation(AActor* Item, EEquipmentType NewType)
 {
+	if(!Item)
+		return;
 
+	if (HeldItemRight)
+	{
+		ServerDropItem();
+	}
+	HeldItemRight = Item;
+	EquipmentType = NewType;
+	ApplyHeldVisual(HeldItemRight, true);
+	ApplyAttach();
 }
 
 void UEquipmentComponent::ServerEquipLeftItem_Implementation(AActor* Item, EEquipmentType NewType)
 {
-
+	if(!Item)
+		return;
+	if(HeldItemLeft)
+		{
+			HeldItemLeft->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			ApplyHeldVisual(HeldItemLeft, false);
+			DropActorToFront(HeldItemLeft);
+			HeldItemLeft = nullptr;
+		}
+	HeldItemLeft = Item;
+	EquipmentType = NewType;
+	ApplyHeldVisual(HeldItemLeft, true);
+	ApplyAttach();
 }
 
 void UEquipmentComponent::ServerUnequipAllItems_Implementation()
 {
-
+	if(HeldItemLeft)
+	{
+		HeldItemLeft->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		ApplyHeldVisual(HeldItemLeft, false);
+		DropActorToFront(HeldItemLeft);
+		HeldItemLeft = nullptr;
+	}
+	if(HeldItemRight)
+	{
+		HeldItemRight->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		ApplyHeldVisual(HeldItemRight, false);
+		DropActorToFront(HeldItemRight);
+		HeldItemRight = nullptr;
+	}
+	EquipmentType = EEquipmentType::None;
+	ApplyAttach();
 }
 
-void UEquipmentComponent::ItemDrop()
+void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 {
+	if(!ItemSlot)
+		return;
 
+	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
+	if (!OwnerAC)
+		return;
+
+	AActor* Item = ItemSlot;
+
+	Item->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+	const FVector DropLocation = OwnerAC->GetActorLocation() + OwnerAC->GetActorForwardVector() * 90.0f
+		+ FVector(0.f, 0.f, 40.f);
+
+	Item->SetActorLocation(DropLocation);
+
+	if(UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Item->GetRootComponent()))
+	{
+		PrimComp->SetSimulatePhysics(true);
+		PrimComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+
+	ItemSlot = nullptr;
 }
 
 void UEquipmentComponent::RequestInteractToggle(AActor* CandidateItem)
 {
+	if (!GetOwner())
+		return;
 
+	if (!GetOwner()->HasAuthority())
+	{
+		ServerToggleInteract(CandidateItem);
+		return;
+	}
+	ServerToggleInteract(CandidateItem);
+}
+
+void UEquipmentComponent::ServerDropItem_Implementation()
+{
+	if (!HeldItemRight && !HeldItemLeft)
+		return;
+
+	ItemDrop(HeldItemRight);
+	ItemDrop(HeldItemLeft);
+
+	EquipmentType = EEquipmentType::None;
+
+	ApplyAttach();
 }
 
 void UEquipmentComponent::ServerToggleInteract_Implementation(AActor* CandidateItem)
 {
+	if (HeldItemRight)
+	{
+		ServerDropItem();
+		return;
+	}
 
+	if(HeldItemLeft)
+	{
+		ServerDropItem();
+		return;
+	}
+
+	if(!CandidateItem)
+		return;
+
+	const EEquipmentType NewType = DetermineEquipmentType(CandidateItem);
+	if(NewType == EEquipmentType::None)
+		return;
+
+	ServerEquipRightItem(CandidateItem, NewType);
 }
 
 // Called when the game starts
@@ -137,7 +237,7 @@ void UEquipmentComponent::DropActorToFront(AActor* Item)
 
 AAlkaidCharacter* UEquipmentComponent::GetOwnerCharacter() const
 {
-	return nullptr;
+	return Cast<AAlkaidCharacter>(GetOwner());
 }
 
 EEquipmentType UEquipmentComponent::DetermineEquipmentType(AActor* Item) const
