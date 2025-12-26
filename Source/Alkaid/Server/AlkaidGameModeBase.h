@@ -12,16 +12,15 @@ class ALKAID_API AAlkaidGameModeBase : public AGameModeBase
 public:
 	//입장 맵.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Travel")
-	FString LobbyMapPath = TEXT("/Game/Server/Map/TestMap");
+	FString LobbyMapPath = TEXT("125.183.170.242:7777");
 	//퍼즐 맵.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Travel")
-	FString PuzzleMapPath = TEXT("/Game/Server/Map/TestMap1");
+	FString PuzzleMapPath = TEXT("125.183.170.242:7778");
 	//로비로 복귀.
 	UFUNCTION(BlueprintCallable)
 	void ReturnToLobby();
 
 protected:
 	//맵 이동.
-	void TravelTo(const FString& MapPath);
 	void ResetRoomOnReturn();
 };

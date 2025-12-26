@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerController.h"
 
 void AAlkaidGameModeBase::ReturnToLobby()
 {
@@ -12,26 +13,22 @@ void AAlkaidGameModeBase::ReturnToLobby()
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Return to Lobby"));
-	ResetRoomOnReturn();
-	TravelTo(LobbyMapPath);
-}
-
-void AAlkaidGameModeBase::TravelTo(const FString& MapPath)
-{
 	UWorld* World = GetWorld();
 	if (!World)
 	{
 		return;
 	}
 
-	if (MapPath.IsEmpty())
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
-		return;
-	}
+		APlayerController* PC = It->Get();
+		if (!PC)
+		{
+			continue;
+		}
 
-	UE_LOG(LogTemp, Warning, TEXT("TravelTo : %s"), *MapPath);
-	World->ServerTravel(*MapPath);
+		PC->ClientTravel(LobbyMapPath, ETravelType::TRAVEL_Absolute);
+	}
 }
 
 void AAlkaidGameModeBase::ResetRoomOnReturn()
@@ -47,8 +44,8 @@ void AAlkaidGameModeBase::ResetRoomOnReturn()
 		{
 			if (AMyPlayerState* MyPS = Cast<AMyPlayerState>(PS))
 			{
-				MyPS->bActorSeamlessTraveled = false;
-				MyPS->bActorSeamlessTraveled = false;
+				MyPS->bInRoom = false;
+				MyPS->bReady = false;
 			}
 		}
 	}
@@ -56,7 +53,6 @@ void AAlkaidGameModeBase::ResetRoomOnReturn()
 	if (AAlkaidGameStateBase* GS = GetGameState<AAlkaidGameStateBase>())
 	{
 		GS->RoomState = ERoomState::Free;
-		GS->RoomLeaderPS = nullptr;
 		GS->bStartReady = false;
 		GS->RoomPlayerCount = 0;
 		GS->RoomReadyCount = 0;

@@ -8,13 +8,13 @@ public class Alkaid : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" , "UMG", "NavigationSystem",  });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" , "UMG", "NavigationSystem", "Niagara", });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
         PublicIncludePaths.AddRange(new string[]
         {
-            "Alkaid","Server" 
+            "Alkaid","Server",
         });
 
         // Uncomment if you are using Slate UI
