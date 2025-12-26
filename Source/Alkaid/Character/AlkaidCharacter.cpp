@@ -254,7 +254,20 @@ void AAlkaidCharacter::HandleLookInput(const FInputActionValue& InValue)
 
 void AAlkaidCharacter::HandleUsingItemInput(const FInputActionValue& InValue)
 {
-	
+	UE_LOG(LogTemp, Warning, TEXT("[Input] HandleUsingItemInput fired"));
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Green, TEXT("[Input] Fired"));
+
+	if (EquipmentComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Input] EquipmentComponent OK, CurrentInteractItem=%s"),
+			CurrentInteractItem ? *CurrentInteractItem->GetName() : TEXT("NULL"));
+
+		EquipmentComponent->RequestInteractToggle(CurrentInteractItem);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Input] EquipmentComponent is NULL"));
+	}
 }
 
 void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)

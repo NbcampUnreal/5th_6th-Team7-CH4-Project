@@ -37,3 +37,14 @@ void APuzzleSignBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME(APuzzleSignBase, DisplayId);
 }
+
+void APuzzleSignBase::ServerSetDisplayId(const FPuzzleId& NewId)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	DisplayId = NewId;
+	BP_OnDisplayIdChanged(DisplayId.Id); // 서버 즉시 반영
+}

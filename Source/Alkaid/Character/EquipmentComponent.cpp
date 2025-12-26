@@ -3,6 +3,7 @@
 #include "Character/EquipmentComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Components/PrimitiveComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Alkaid/Character/AlkaidCharacter.h"
 
 // Sets default values for this component's properties
@@ -87,6 +88,50 @@ void UEquipmentComponent::ServerUnequipAllItems_Implementation()
 	ApplyAttach();
 }
 
+void UEquipmentComponent::ServerTryInteract_Implementation()
+{
+	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
+	if(!OwnerAC)
+		return;
+
+	if (HeldItemRight || HeldItemLeft)
+	{
+		ServerDropItem();
+		return;
+	}
+	FVector Start = OwnerAC->GetPawnViewLocation();
+	FVector End = Start + (OwnerAC->GetControlRotation().Vector() * 200.0f);
+
+	FHitResult Hit;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(InteractTrace), false, OwnerAC);
+
+	bool  bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		Start,
+		End,
+		ECC_GameTraceChannel1,//시선전용채널
+		Params
+	);
+
+
+	AActor* Candidate = Hit.GetActor();
+	if (!Candidate) return;
+
+	const EEquipmentType NewType = DetermineEquipmentType(Candidate);
+	if(NewType == EEquipmentType::None)
+		return;
+
+	DrawDebugLine(GetWorld(),
+		Start,
+		End,
+		FColor::Red,
+		false,
+		4.0f,
+		0,
+		3.0f);
+	ServerEquipRightItem(Candidate, NewType);
+}
+
 void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 {
 	if(!ItemSlot)
@@ -114,17 +159,21 @@ void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 	ItemSlot = nullptr;
 }
 
-void UEquipmentComponent::RequestInteractToggle(AActor* CandidateItem)
+void UEquipmentComponent::RequestInteractToggle(AActor*)
 {
+
 	if (!GetOwner())
 		return;
 
 	if (!GetOwner()->HasAuthority())
 	{
-		ServerToggleInteract(CandidateItem);
+		
+		ServerTryInteract();
 		return;
 	}
-	ServerToggleInteract(CandidateItem);
+
+	
+	ServerTryInteract();
 }
 
 void UEquipmentComponent::ServerDropItem_Implementation()
@@ -244,13 +293,25 @@ EEquipmentType UEquipmentComponent::DetermineEquipmentType(AActor* Item) const
 {
 	if (!Item) return EEquipmentType::None;
 
+	UE_LOG(LogTemp, Warning, TEXT("[Equip] DetermineEquipmentType Item=%s Class=%s"),
+		*Item->GetName(), *Item->GetClass()->GetName());
+
+
 	for(const auto& Pair : ItemClassToEquipmentType)
 	{
+		if (Pair.Key)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("  - Check Key=%s  IsA=%d"),
+				*Pair.Key->GetName(), Item->IsA(Pair.Key));
+		}
+
 		if (Pair.Key &&Item->IsA(Pair.Key))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("  => MATCH Type=%d"), (int32)Pair.Value);
 			return Pair.Value;
 		}
 	}
+	UE_LOG(LogTemp, Warning, TEXT("  => NO MATCH"));
 	return EEquipmentType::None;
 }
 
