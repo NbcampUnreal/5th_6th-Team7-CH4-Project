@@ -60,7 +60,7 @@ public:
 
 	void ItemDrop(TObjectPtr<AActor>& ItemSlot);
 
-	void RequestInteractToggle(AActor* CandidateItem);
+	void RequestInteractToggle(AActor* /*CandidateItem*/);
 
 	UFUNCTION(Server, Reliable)
 	void ServerToggleInteract(AActor* CandidateItem);

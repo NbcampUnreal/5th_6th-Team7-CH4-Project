@@ -13,11 +13,6 @@ UEquipmentComponent::UEquipmentComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
 	
-	UE_LOG(LogTemp, Warning, TEXT("TEST LOG"));
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("TEST SCREEN LOG"));
-	}
 }
 
 void UEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -119,7 +114,7 @@ void UEquipmentComponent::ServerTryInteract_Implementation()
 	if(NewType == EEquipmentType::None)
 		return;
 
-	
+	ServerEquipRightItem(Candidate, NewType);
 }
 
 void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
@@ -149,25 +144,21 @@ void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 	ItemSlot = nullptr;
 }
 
-void UEquipmentComponent::RequestInteractToggle(AActor* CandidateItem)
+void UEquipmentComponent::RequestInteractToggle(AActor*)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Equip] RequestInteractToggle called. Owner=%s HasAuth=%d Candidate=%s"),
-		GetOwner() ? *GetOwner()->GetName() : TEXT("NULL"),
-		GetOwner() ? (int32)GetOwner()->HasAuthority() : -1,
-		CandidateItem ? *CandidateItem->GetName() : TEXT("NULL"));
 
 	if (!GetOwner())
 		return;
 
 	if (!GetOwner()->HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Equip] Calling ServerToggleInteract RPC"));
-		ServerToggleInteract(CandidateItem);
+		
+		ServerTryInteract();
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[Equip] On Server, calling ServerToggleInteract directly"));
-	ServerToggleInteract(CandidateItem);
+	
+	ServerTryInteract();
 }
 
 void UEquipmentComponent::ServerDropItem_Implementation()
