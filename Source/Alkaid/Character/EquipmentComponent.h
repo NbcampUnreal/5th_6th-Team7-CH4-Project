@@ -51,13 +51,16 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipLeftItem(AActor* Item, EEquipmentType NewType);
+	
+	UFUNCTION(Server, Reliable)
+	void ServerTryInteract();
 
 	UFUNCTION(Server, Reliable)
 	void ServerUnequipAllItems();
 
 	void ItemDrop(TObjectPtr<AActor>& ItemSlot);
 
-	void RequestInteractToggle(AActor* CandidateItem);
+	void RequestInteractToggle(AActor* /*CandidateItem*/);
 
 	UFUNCTION(Server, Reliable)
 	void ServerToggleInteract(AActor* CandidateItem);

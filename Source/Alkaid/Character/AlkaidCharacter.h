@@ -148,6 +148,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "StaminaWidget")
 	TSubclassOf<UUserWidget> StaminaWidget;
+
+	UPROPERTY()
+	TObjectPtr<AActor> CurrentInteractItem = nullptr;
 private:
 	
 	UPROPERTY()
