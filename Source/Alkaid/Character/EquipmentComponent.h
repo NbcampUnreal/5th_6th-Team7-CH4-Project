@@ -55,12 +55,15 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerUnequipAllItems();
 
-	void ItemDrop();
+	void ItemDrop(TObjectPtr<AActor>& ItemSlot);
 
 	void RequestInteractToggle(AActor* CandidateItem);
 
 	UFUNCTION(Server, Reliable)
 	void ServerToggleInteract(AActor* CandidateItem);
+
+	UFUNCTION(Server, Reliable)
+	void ServerDropItem();
 
 	FORCEINLINE EEquipmentType GetEquipmentType() const { return EquipmentType; }
 	FORCEINLINE AActor* GetHeldItemRight() const { return HeldItemRight; }
