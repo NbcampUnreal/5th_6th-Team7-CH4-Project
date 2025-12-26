@@ -21,11 +21,11 @@ class ALKAID_API APuzzleReceiverBox : public AActor
 public:
 	APuzzleReceiverBox();
 
-	// ·¹º§ ÀÎ½ºÅÏ½º¸¶´Ù °íÁ¤À¸·Î ºÎ¿©(¼öÁı¿ë)
+	// ë ˆë²¨ ì¸ìŠ¤í„´ìŠ¤ë§ˆë‹¤ ê³ ì •ìœ¼ë¡œ ë¶€ì—¬(ìˆ˜ì§‘ìš©)
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Puzzle|Receiver")
 	FPuzzleId ReceiverId;
 
-	// ÀÌ¹ø ÆÇÀÇ Á¤´ä ID(°ÔÀÓ Áß GameMode°¡ ¼¼ÆÃ)
+	// ì´ë²ˆ íŒì˜ ì •ë‹µ ID(ê²Œì„ ì¤‘ GameModeê°€ ì„¸íŒ…)
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Puzzle|Receiver")
 	FPuzzleId ExpectedId;
 
@@ -35,7 +35,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Puzzle|Receiver")
 	FOnReceiverSolved OnSolved;
 
-	// Æ®¸®°Å ¸ğ¾ç ¼±ÅÃ(¹öÆ°ÀÌ¶û µ¿ÀÏ)
+	// íŠ¸ë¦¬ê±° ëª¨ì–‘ ì„ íƒ(ë²„íŠ¼ì´ë‘ ë™ì¼)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Puzzle")
 	EPuzzleTriggerShape TriggerShape = EPuzzleTriggerShape::Box;
 

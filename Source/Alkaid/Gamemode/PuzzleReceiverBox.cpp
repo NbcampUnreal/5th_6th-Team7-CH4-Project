@@ -21,11 +21,11 @@ APuzzleReceiverBox::APuzzleReceiverBox()
 	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("TriggerCapsule"));
 	TriggerCapsule->SetupAttachment(Root);
 
-	// Æ®¸®°Å Å©±â(BP¿¡¼­ ¼öÁ¤)
+	// íŠ¸ë¦¬ê±° í¬ê¸°(BPì—ì„œ ìˆ˜ì •)
 	TriggerBox->SetBoxExtent(FVector(60.f, 60.f, 60.f));
 	TriggerCapsule->SetCapsuleSize(60.f, 80.f);
 
-	// µÑ ´Ù ±âº»Àº ²¨µÎ°í Resolve¿¡¼­ ÇÏ³ª¸¸ ÄÕ´Ï´Ù
+	// ë‘˜ ë‹¤ ê¸°ë³¸ì€ êº¼ë‘ê³  Resolveì—ì„œ í•˜ë‚˜ë§Œ ì¼­ë‹ˆë‹¤
 	TriggerBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -50,7 +50,7 @@ void APuzzleReceiverBox::BeginPlay()
 		return;
 	}
 
-	// ¼­¹ö¿¡¼­ ÆÇÁ¤
+	// ì„œë²„ì—ì„œ íŒì •
 	if (HasAuthority())
 	{
 		Trigger->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerBeginOverlap);
@@ -90,13 +90,13 @@ void APuzzleReceiverBox::OnTriggerBeginOverlap(
 	if (!IsValid(Piece))
 		return;
 
-	// ExpectedId°¡ ºñ¾îÀÖÀ¸¸é(¼¼ÆÃ ¾ÈµÊ) Ã³¸® ºÒ°¡
+	// ExpectedIdê°€ ë¹„ì–´ìˆìœ¼ë©´(ì„¸íŒ… ì•ˆë¨) ì²˜ë¦¬ ë¶ˆê°€
 	if (!ExpectedId.IsValid())
 		return;
 
 	if (Piece->PieceId.Id == ExpectedId.Id)
 	{
-		// Á¤´äÀÌ¸é Á¶°¢ Á¦°Å + solved Ã³¸®
+		// ì •ë‹µì´ë©´ ì¡°ê° ì œê±° + solved ì²˜ë¦¬
 		Piece->Destroy();
 		ServerMarkSolved();
 	}
@@ -112,7 +112,7 @@ void APuzzleReceiverBox::ServerMarkSolved()
 
 	bSolved = true;
 
-	// ¼­¹ö¿¡¼­µµ ÀÌº¥Æ® ½÷ÁÖ±â
+	// ì„œë²„ì—ì„œë„ ì´ë²¤íŠ¸ ì´ì£¼ê¸°
 	OnSolved.Broadcast(this, true);
 }
 

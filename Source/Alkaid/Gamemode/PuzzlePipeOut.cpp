@@ -44,7 +44,7 @@ APuzzlePieceBase* APuzzlePipeOut::SpawnPiece(TSubclassOf<APuzzlePieceBase> Piece
 
 	Spawned->PieceId = InPieceId;
 
-	// ½ºÆù Á÷ÈÄ, ¹°¸® on(°­Á¦½ÃÄÑ ¿À·ù¹æÁö)
+	// ìŠ¤í° ì§í›„, ë¬¼ë¦¬ on(ê°•ì œì‹œì¼œ ì˜¤ë¥˜ë°©ì§€)
 	if (Spawned->Mesh)
 	{
 		Spawned->Mesh->WakeAllRigidBodies();

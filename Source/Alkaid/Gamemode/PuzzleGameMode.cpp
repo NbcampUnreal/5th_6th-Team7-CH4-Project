@@ -12,7 +12,7 @@ void APuzzleGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// GameMode´Â ¼­¹ö¿¡¸¸ Á¸ÀçÇÏÁö¸¸ ¾ÈÀüÇÏ°Ô ÇÑ¹ø ´õ °Ë»ç
+	// GameModeëŠ” ì„œë²„ì—ë§Œ ì¡´ì¬í•˜ì§€ë§Œ ì•ˆì „í•˜ê²Œ í•œë²ˆ ë” ê²€ì‚¬
 	if (!HasAuthority())
 	{
 		return;
@@ -27,7 +27,7 @@ void APuzzleGameMode::CollectActorsAndBind()
 	ButtonById.Empty();
 	OpenedDoorIds.Empty();
 
-	// ¹® ¼öÁı
+	// ë¬¸ ìˆ˜ì§‘
 	for (TActorIterator<APuzzleColorDoor> It(GetWorld()); It; ++It)
 	{
 		APuzzleColorDoor* Door = *It;
@@ -45,7 +45,7 @@ void APuzzleGameMode::CollectActorsAndBind()
 		DoorById.Add(DoorId, Door);
 	}
 
-	// ¹öÆ° ¼öÁı ¹× ¹ÙÀÎµù
+	// ë²„íŠ¼ ìˆ˜ì§‘ ë° ë°”ì¸ë”©
 	for (TActorIterator<APuzzleColorButton> It(GetWorld()); It; ++It)
 	{
 		APuzzleColorButton* Button = *It;
@@ -62,7 +62,7 @@ void APuzzleGameMode::CollectActorsAndBind()
 
 		ButtonById.Add(ButtonId, Button);
 
-		// Áßº¹ ¹ÙÀÎµù ¹æÁö ÈÄ ¹ÙÀÎµù
+		// ì¤‘ë³µ ë°”ì¸ë”© ë°©ì§€ í›„ ë°”ì¸ë”©
 		Button->OnPressedChanged.RemoveDynamic(this, &ThisClass::OnButtonPressedChanged);
 		Button->OnPressedChanged.AddDynamic(this, &ThisClass::OnButtonPressedChanged);
 	}
@@ -80,7 +80,7 @@ void APuzzleGameMode::OnButtonPressedChanged(APuzzleColorButton* Button, bool bP
 		return;
 	}
 
-	// 1_1Àº ´­¸²ÀÌ true°¡ µÇ´Â ¼ø°£¸¸ Ã³¸®
+	// 1_1ì€ ëˆŒë¦¼ì´ trueê°€ ë˜ëŠ” ìˆœê°„ë§Œ ì²˜ë¦¬
 	if (!bPressed)
 	{
 		return;
@@ -94,14 +94,14 @@ void APuzzleGameMode::OnButtonPressedChanged(APuzzleColorButton* Button, bool bP
 
 	const FString PuzzleKey = GetPuzzleKeyFromId(ButtonId);
 
-	// ÆÛÁñÀ» °è¼Ó ½×¾Æ°¥ ºĞ±â ÁöÁ¡
+	// í¼ì¦ì„ ê³„ì† ìŒ“ì•„ê°ˆ ë¶„ê¸° ì§€ì 
 	if (PuzzleKey == TEXT("1_1"))
 	{
 		HandlePuzzle_1_1(Button);
 		return;
 	}
 
-	// ´ÙÀ½ ÆÛÁñµéÀº ¿©±â¿¡ Ãß°¡
+	// ë‹¤ìŒ í¼ì¦ë“¤ì€ ì—¬ê¸°ì— ì¶”ê°€
 	// if (PuzzleKey == TEXT("1_2")) { HandlePuzzle_1_2(Button); return; }
 }
 
@@ -112,7 +112,7 @@ FString APuzzleGameMode::GetPuzzleKeyFromId(const FName& InId) const
 	TArray<FString> Parts;
 	S.ParseIntoArray(Parts, TEXT("_"), true);
 
-	// 1_1 Ã³·³ ÃÖ¼Ò µÎ ÅäÅ«ÀÌ ÀÖ¾î¾ß ÇÔ
+	// 1_1 ì²˜ëŸ¼ ìµœì†Œ ë‘ í† í°ì´ ìˆì–´ì•¼ í•¨
 	if (Parts.Num() < 2)
 	{
 		return FString();
@@ -125,7 +125,7 @@ FName APuzzleGameMode::MakeDoorIdFromButtonId_1_1(const FName& ButtonId) const
 {
 	FString S = ButtonId.ToString();
 
-	// ³¡ÀÌ ButtonÀÌ¸é Door·Î ¹Ù²Û´Ù
+	// ëì´ Buttonì´ë©´ Doorë¡œ ë°”ê¾¼ë‹¤
 	if (S.EndsWith(TEXT("Button")))
 	{
 		S.LeftChopInline(6);
@@ -142,7 +142,7 @@ void APuzzleGameMode::OpenDoorById(const FName& DoorId)
 		return;
 	}
 
-	// ÀÌ¹Ì ¿­¸° ¹®Àº ´Ù½Ã Ã³¸®ÇÏÁö ¾ÊÀ½
+	// ì´ë¯¸ ì—´ë¦° ë¬¸ì€ ë‹¤ì‹œ ì²˜ë¦¬í•˜ì§€ ì•ŠìŒ
 	if (OpenedDoorIds.Contains(DoorId))
 	{
 		return;
@@ -162,7 +162,7 @@ void APuzzleGameMode::OpenDoorById(const FName& DoorId)
 
 	OpenedDoorIds.Add(DoorId);
 
-	// ¹® ³»ºÎ¿¡¼­ Destroy ÇÑ´Ù
+	// ë¬¸ ë‚´ë¶€ì—ì„œ Destroy í•œë‹¤
 	Door->OpenDoor();
 }
 
@@ -173,8 +173,8 @@ void APuzzleGameMode::HandlePuzzle_1_1(APuzzleColorButton* Button)
 		return;
 	}
 
-	// 1_1 ±ÔÄ¢
-	// ¹öÆ° Id¿¡¼­ ¹® Id¸¦ ¸¸µç´Ù
+	// 1_1 ê·œì¹™
+	// ë²„íŠ¼ Idì—ì„œ ë¬¸ Idë¥¼ ë§Œë“ ë‹¤
 	const FName ButtonId = Button->ButtonId.Id;
 	const FName DoorId = MakeDoorIdFromButtonId_1_1(ButtonId);
 

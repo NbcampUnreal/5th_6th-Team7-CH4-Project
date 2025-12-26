@@ -23,11 +23,11 @@ class ALKAID_API APuzzlePipeIn : public AActor
 public:
 	APuzzlePipeIn();
 
-	// ¾îµğ·Î º¸³¾Áö(·¹º§¿¡¼­ ÀÎ½ºÅÏ½ºº°·Î ÁöÁ¤)
+	// ì–´ë””ë¡œ ë³´ë‚¼ì§€(ë ˆë²¨ì—ì„œ ì¸ìŠ¤í„´ìŠ¤ë³„ë¡œ ì§€ì •)
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Puzzle|Pipe")
 	TObjectPtr<APuzzlePipeOut> LinkedOutPipe = nullptr;
 
-	// Æ®¸®°Å ÇüÅÂ Box / Capsule Áß ¼±ÅÃ
+	// íŠ¸ë¦¬ê±° í˜•íƒœ Box / Capsule ì¤‘ ì„ íƒ
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Puzzle|Pipe")
 	EPuzzleTriggerShape TriggerShape = EPuzzleTriggerShape::Capsule;
 
@@ -37,7 +37,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
-	// °ø¿ë Æ®¸®°Å Æ÷ÀÎÅÍ
+	// ê³µìš© íŠ¸ë¦¬ê±° í¬ì¸í„°
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UShapeComponent> Trigger = nullptr;
 

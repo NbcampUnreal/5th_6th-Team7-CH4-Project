@@ -15,13 +15,17 @@ class ALKAID_API APuzzleSignBase : public AActor
 public:
 	APuzzleSignBase();
 
-	// ½½·Ô ÀÚÃ¼ ID(·¹º§¿¡¼­ °íÁ¤)
+	// ìŠ¬ë¡¯ ìì²´ ID(ë ˆë²¨ì—ì„œ ê³ ì •)
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Puzzle|Sign")
 	FPuzzleId SignSlotId;
 
-	// ÀÌ¹ø ÆÇ¿¡ Ç¥½ÃÇÒ ID(GameMode°¡ ¼¼ÆÃ)
+	// ì´ë²ˆ íŒì— í‘œì‹œí•  ID(GameModeê°€ ì„¸íŒ…)
 	UPROPERTY(ReplicatedUsing = OnRep_DisplayId, BlueprintReadOnly, Category = "Puzzle|Sign")
 	FPuzzleId DisplayId;
+
+	// ì„œë²„ê°€ í‘œì‹œí•  IDë¥¼ ì„¸íŒ…í•  ë•Œ í˜¸ì¶œ 
+	UFUNCTION(BlueprintCallable, Category = "Puzzle|Sign") 
+	void SetDisplayId(FName NewId); 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
@@ -33,7 +37,7 @@ protected:
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	// BP¿¡¼­ ¸ğ¾ç/¸ÓÆ¼¸®¾ó 
+	// BPì—ì„œ ëª¨ì–‘/ë¨¸í‹°ë¦¬ì–¼ 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Puzzle|Sign")
 	void BP_OnDisplayIdChanged(FName NewId);
 };
