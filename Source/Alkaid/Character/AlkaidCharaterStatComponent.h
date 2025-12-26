@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AlkaidCharaterStatComponent.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float/*Current*/, float/*Max*/);
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -21,6 +22,7 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	FOnStaminaChanged OnStaminaChanged;
 
 	// Stamina
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Stamina, Category = "AlkaidCharacter|Stamina")
@@ -56,11 +58,20 @@ public:
 	void AddNomalSpeed(float Amount);//server
 
 	void ApplySpeed();
-	                  
-	// 스태미나 HUD 업데이트
-	void UpdateHUDStamina();
 
-	
+
+	//candle
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "AlkaidCharacter|Candle")
+	float CandleCount;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Candle")
+	float MaxCandleCount = 3.0f;
+
+	FORCEINLINE float GetCandleCount() const { return CandleCount; }
+
+	void AddCandleCount(float Amount);//server
+
+	void SetCandleCount(float NewCandleCount);//server
 
 	//candle cooltime
 	UPROPERTY(ReplicatedUsing=OnRep_CandleCoolDonwEndTime)
@@ -75,27 +86,7 @@ public:
 	float GetCandleCooldownRemainingTime() const;
 
 	void StartCandleCooldown();//server
-	
-	//sprint
-	UPROPERTY(EditDefaultsOnly, Replicated, Category = "AlkaidCharacter|Speed")
-	float BaseWalkSpeed = 500;
 
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = "AlkaidCharacter|Speed")
-	float SpeedBonus = 0.f;
-
-	UPROPERTY(EditDefaultsOnly, Replicated, BlueprintReadOnly, Category = "AlkaidCharacter|SprintSpeed")
-	float SprintMultiplier = 1.5f;
-
-	FORCEINLINE float GetWalkSpeed() const
-	{
-		return BaseWalkSpeed + SpeedBonus;
-	}
-
-	FORCEINLINE float GetFinalMoveSpeed(bool bSprinting) const
-	{
-		const float Walk = GetWalkSpeed();
-		return bSprinting ? Walk * SprintMultiplier : Walk;
-	}
 
 protected:
 	// Called when the game starts
@@ -108,15 +99,6 @@ protected:
 	void OnRep_Speed();	
 	UFUNCTION()
 	void OnRep_CandleCoolDonwEndTime();
-
-
-private:
-	UPROPERTY()
-	class AAlkaidPlayerController* AKPlayerController;
-
-	UPROPERTY()
-	class AAlkaidCharacter* AKCharacter;
-
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

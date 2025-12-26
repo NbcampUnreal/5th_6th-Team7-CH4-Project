@@ -11,8 +11,7 @@
 			"AdditionalDependencies": [
 				"CommonUI",
 				"Engine",
-				"AIModule",
-				"UMG"
+				"AIModule"
 			]
 		}
 	],

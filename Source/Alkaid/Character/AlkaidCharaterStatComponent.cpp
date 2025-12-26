@@ -4,8 +4,6 @@
 #include "Character/AlkaidCharaterStatComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-#include "Alkaid/Controller/AlkaidPlayerController.h"
-#include "Alkaid/Character/AlkaidCharacter.h"
 
 // Sets default values for this component's properties
 UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
@@ -16,7 +14,9 @@ UAlkaidCharaterStatComponent::UAlkaidCharaterStatComponent()
 	SetIsReplicatedByDefault(true);
 
 	MaxStamina = 100.0f;
+	Stamina = MaxStamina;
 	NomalSpeed = 500.0f;
+	CandleCount = 0.0f;
 	CandleCooldownSeconds = 3.0f;
 }
 
@@ -27,9 +27,7 @@ void UAlkaidCharaterStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, Stamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, MaxStamina);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, NomalSpeed);
-	DOREPLIFETIME(UAlkaidCharaterStatComponent, BaseWalkSpeed);
-	DOREPLIFETIME(UAlkaidCharaterStatComponent, SpeedBonus);
-	DOREPLIFETIME(UAlkaidCharaterStatComponent, SprintMultiplier);
+	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCount);
 	DOREPLIFETIME(UAlkaidCharaterStatComponent, CandleCoolDownEndTime);
 }
 
@@ -38,8 +36,6 @@ void UAlkaidCharaterStatComponent::AddStamina(float Amount)
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		Stamina = FMath::Clamp(Stamina + Amount, 0.0f, MaxStamina);
-
-		ApplyStamina();
 	}
 }
 
@@ -65,7 +61,6 @@ void UAlkaidCharaterStatComponent::AddMaxStamina(float Amount)
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		MaxStamina = FMath::Max(0.0f, MaxStamina + Amount);
-		ApplyStamina();
 	}
 }
 
@@ -84,11 +79,8 @@ void UAlkaidCharaterStatComponent::ApplyStamina()
 			return;
 		if(!PawnOwner->IsLocallyControlled())
 			return;	
-		AAlkaidPlayerController* PC = Cast<AAlkaidPlayerController>(PawnOwner->GetController());
-		if(PC)
-		{
-			PC->SetHUDStamina(Stamina, MaxStamina);
-		}
+	
+		OnStaminaChanged.Broadcast(Stamina, MaxStamina);
 }
 
 void UAlkaidCharaterStatComponent::SetNomalSpeed(float NewNomalSpeed)
@@ -119,32 +111,28 @@ void UAlkaidCharaterStatComponent::AddNomalSpeed(float Amount)
 
 void UAlkaidCharaterStatComponent::ApplySpeed()
 {
-	ACharacter* Character = Cast<ACharacter>(GetOwner());
-	if (!Character) return;
-
-	UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement();
-	if (!MoveComp) return;
-
-	bool bSprinting = false;
-	if (AAlkaidCharacter* AC = Cast<AAlkaidCharacter>(GetOwner()))
+	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
 	{
-		bSprinting = AC->IsSprinting();
+		if (UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement())
+		{
+			MoveComp->MaxWalkSpeed = NomalSpeed;
+		}
 	}
-
-	MoveComp->MaxWalkSpeed = GetFinalMoveSpeed(bSprinting);
 }
 
-void UAlkaidCharaterStatComponent::UpdateHUDStamina()
+void UAlkaidCharaterStatComponent::AddCandleCount(float Amount)
 {
-	AKCharacter = AKCharacter == nullptr ? Cast<AAlkaidCharacter>(GetOwner()) : AKCharacter;
-	if (AKCharacter)
+	if (GetOwner() && GetOwner()->HasAuthority())
 	{
-		AKPlayerController = AKPlayerController == nullptr 
-			? Cast<AAlkaidPlayerController>(AKCharacter->Controller) : AKPlayerController;
-		if (AKPlayerController)
-		{
-			AKPlayerController->SetHUDStamina(Stamina, MaxStamina);
-		}
+		CandleCount =  FMath::Clamp(CandleCount + Amount, 0.0f, MaxCandleCount);
+	}
+}
+
+void UAlkaidCharaterStatComponent::SetCandleCount(float NewCandleCount)
+{
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		CandleCount = FMath::Clamp(NewCandleCount, 0.0f, MaxCandleCount);
 	}
 }
 
@@ -169,6 +157,8 @@ void UAlkaidCharaterStatComponent::StartCandleCooldown()
 	CandleCoolDownEndTime = UGameplayStatics::GetTimeSeconds(GetWorld()) + CandleCooldownSeconds;
 }
 
+
+
 // Called when the game starts
 void UAlkaidCharaterStatComponent::BeginPlay()
 {
@@ -180,21 +170,10 @@ void UAlkaidCharaterStatComponent::BeginPlay()
 	}
 	ApplyStamina();
 	ApplySpeed();
-
-	if (!AKCharacter)
-	{
-		AKCharacter = Cast<AAlkaidCharacter>(GetOwner());
-	}
-	AKPlayerController = Cast<AAlkaidPlayerController>(AKCharacter->Controller);
-	if (AKPlayerController)
-	{
-		AKPlayerController->SetHUDStamina(Stamina, MaxStamina);
-	}
 }
 
 void UAlkaidCharaterStatComponent::OnRep_Stamina()
 {
-	//UE_LOG(LogTemp, Warning, TEXT("[CLIENT] OnRep_Stamina: %f"), Stamina);
 	ApplyStamina();
 }
 

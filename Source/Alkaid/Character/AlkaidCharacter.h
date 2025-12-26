@@ -41,19 +41,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AlkaidCharacter|Component")
 	TObjectPtr<UCameraComponent> Camera;
 
-	//component
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
 	UAlkaidCharaterStatComponent* StatComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
 	UEquipmentComponent* EquipmentComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
-	class UItemComponent* ItemComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AlkaidCharacter|Component")
-	class UBuffComponent* BuffComponent;
 
 	//component
 	void PostInitializeComponents() override;
@@ -62,26 +54,10 @@ public:
 	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 
-	//Sprint
-	UPROPERTY(ReplicatedUsing = OnRep_IsSprinting)
-	bool bIsSprinting = false;
-
-	UFUNCTION()
-	void OnRep_IsSprinting();
-
-	void SprintSpeed_Server();
-
-	FORCEINLINE bool IsSprinting() const { return bIsSprinting; }
-
 	//server
 	UFUNCTION(Server, Reliable)
-	void ServerUseCandle(); 
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	UFUNCTION(Server, Reliable)
-	void ServerSetSprinting(bool NewSprinting);
-
+	void ServerUseCandle();
+	
 	//Input
 private:
 	void HandleMoveInput(const FInputActionValue& InValue);
@@ -98,11 +74,7 @@ private:
 
 	void HandleReadyInput(const FInputActionValue& InValue);
 
-	void HandleStartInput(const FInputActionValue& InValue);
 
-	void StartSprint(const FInputActionValue& Invalue);
-
-	void StopSprint(const FInputActionValue& Invalue);
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -131,12 +103,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputAction> ReadyAction;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharater|Input")
-	TObjectPtr<UInputAction> StartAction;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
-	TObjectPtr<UInputAction> SprintAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AActor> PuzzleClass;
 
@@ -146,28 +112,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "EscMessage")
 	TSubclassOf<UUserWidget> EscWidgetClass;
 
-	UPROPERTY(EditAnywhere, Category = "StaminaWidget")
-	TSubclassOf<UUserWidget> StaminaWidget;
 private:
-	
+	UPROPERTY()
+	TObjectPtr<AActor> HeldItemRight;
+
+	UPROPERTY()
+	TObjectPtr<AActor> HeldItemLeft;
+
 	UPROPERTY()
 	TObjectPtr<AActor> Pushing;
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> EscWidgetInstance;
-
-	UPROPERTY()
-	TObjectPtr<UUserWidget> StaminaWidgetInstance;
-
-	UPROPERTY()
-	bool bElimmed = false;	// 촛불 제단안에 들어왔는가 아닌가
-
-
-public:
-	// Getter, Setter
-	FORCEINLINE UItemComponent* GetItemComp() const { return ItemComponent; }
-	FORCEINLINE UBuffComponent* GetBuffComp() const { return BuffComponent; }
-	// 촛불제단안에 들어왔는가 아닌가
-	FORCEINLINE bool IsElimmed() const { return bElimmed; }		
 
 };

@@ -14,18 +14,4 @@ class ALKAID_API AAlkaidPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
-public:
-	void SetHUDStamina(float Health, float MaxHealth);
-
-	void SetHUDCandle(int32 Candle);
-
-
-
-protected:
-	virtual void BeginPlay() override;
-
-
-
-private:
-	class AAKHUD* AKHUD;
 };
