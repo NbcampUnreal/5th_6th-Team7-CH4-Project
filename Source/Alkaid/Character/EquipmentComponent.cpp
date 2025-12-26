@@ -3,6 +3,7 @@
 #include "Character/EquipmentComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Components/PrimitiveComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Alkaid/Character/AlkaidCharacter.h"
 
 // Sets default values for this component's properties
@@ -104,8 +105,14 @@ void UEquipmentComponent::ServerTryInteract_Implementation()
 	FHitResult Hit;
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(InteractTrace), false, OwnerAC);
 
-	if (!GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
-		return;
+	bool  bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		Start,
+		End,
+		ECC_GameTraceChannel1,//시선전용채널
+		Params
+	);
+
 
 	AActor* Candidate = Hit.GetActor();
 	if (!Candidate) return;
@@ -114,6 +121,14 @@ void UEquipmentComponent::ServerTryInteract_Implementation()
 	if(NewType == EEquipmentType::None)
 		return;
 
+	DrawDebugLine(GetWorld(),
+		Start,
+		End,
+		FColor::Red,
+		false,
+		4.0f,
+		0,
+		3.0f);
 	ServerEquipRightItem(Candidate, NewType);
 }
 
