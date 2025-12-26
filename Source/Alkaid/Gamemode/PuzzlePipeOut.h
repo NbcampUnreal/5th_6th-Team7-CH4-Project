@@ -17,7 +17,7 @@ class ALKAID_API APuzzlePipeOut : public AActor
 public:
 	APuzzlePipeOut();
 
-	// PipeInÀÌ È£Ãâ: Á¶°¢À» SpawnPoint À§Ä¡¿¡¼­ »ı¼º
+	// PipeInì´ í˜¸ì¶œ: ì¡°ê°ì„ SpawnPoint ìœ„ì¹˜ì—ì„œ ìƒì„±
 	UFUNCTION(BlueprintCallable, Category = "Puzzle|Pipe")
 	APuzzlePieceBase* SpawnPiece(TSubclassOf<APuzzlePieceBase> PieceClass, FPuzzleId InPieceId);
 
@@ -27,7 +27,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
-	//  ÆÄÀÌÇÁ "Ãâ±¸ ¾Æ·¡ÂÊ"¿¡ ¹èÄ¡ (Áß·ÂÀ¸·Î ÀÚ¿¬³«ÇÏ)
+	//  íŒŒì´í”„ "ì¶œêµ¬ ì•„ë˜ìª½"ì— ë°°ì¹˜ (ì¤‘ë ¥ìœ¼ë¡œ ìì—°ë‚™í•˜)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<USceneComponent> SpawnPoint = nullptr;
 };

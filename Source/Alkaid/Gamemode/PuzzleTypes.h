@@ -3,26 +3,26 @@
 #include "CoreMinimal.h"
 #include "PuzzleTypes.generated.h"
 
-// ÆÛÁñ¿¡¼­ ¾µ ½Äº°ÀÚ Å¸ÀÔ
-// ¹öÆ°°ú ¹®À» ÀÌ¸§À¸·Î ±¸ºÐ ex): 1_1_RedButton, 1_1_BlueDoor
+// í¼ì¦ì—ì„œ ì“¸ ì‹ë³„ìž íƒ€ìž…
+// ë²„íŠ¼ê³¼ ë¬¸ì„ ì´ë¦„ìœ¼ë¡œ êµ¬ë¶„ ex): 1_1_RedButton, 1_1_BlueDoor
 USTRUCT(BlueprintType)
 struct FPuzzleId
 {
 	GENERATED_BODY()
 
 public:
-	// ½ÇÁ¦ ½Äº°ÀÚ °ª, ¿¡µðÅÍ¿¡¼­ ÀÎ½ºÅÏ½º¸¶´Ù ÀÔ·Â
+	// ì‹¤ì œ ì‹ë³„ìž ê°’, ì—ë””í„°ì—ì„œ ì¸ìŠ¤í„´ìŠ¤ë§ˆë‹¤ ìž…ë ¥
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle")
 	FName Id = NAME_None;
 
-	// ±âº» »ý¼ºÀÚ
+	// ê¸°ë³¸ ìƒì„±ìž
 	FPuzzleId() = default;
 
-	// °ªÀ» ³Ö¾î¼­ ¸¸µé ¶§ ¾²´Â »ý¼ºÀÚ
+	// ê°’ì„ ë„£ì–´ì„œ ë§Œë“¤ ë•Œ ì“°ëŠ” ìƒì„±ìž
 	explicit FPuzzleId(const FName InId) : Id(InId) {}
 
-	// °ªÀÌ ºñ¾îÀÖ´ÂÁö È®ÀÎ
-	// NAME_NoneÀÌ¸é ¾ÆÁ÷ ÁöÁ¤ÇÏÁö ¾ÊÀº »óÅÂ
+	// ê°’ì´ ë¹„ì–´ìžˆëŠ”ì§€ í™•ì¸
+	// NAME_Noneì´ë©´ ì•„ì§ ì§€ì •í•˜ì§€ ì•Šì€ ìƒíƒœ
 	FORCEINLINE bool IsValid() const { return Id != NAME_None; }
 };
 

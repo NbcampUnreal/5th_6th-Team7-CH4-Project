@@ -27,11 +27,11 @@ APuzzlePipeIn::APuzzlePipeIn()
 	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("TriggerCapsule"));
 	TriggerCapsule->SetupAttachment(Root);
 
-	// Æ®¸®Ä¿ ±âº» Å©±â(·¹º§/BP¿¡¼­ Á¶Àý°¡´É)
+	// íŠ¸ë¦¬ì»¤ ê¸°ë³¸ í¬ê¸°(ë ˆë²¨/BPì—ì„œ ì¡°ì ˆê°€ëŠ¥)
 	TriggerBox->SetBoxExtent(FVector(60.f, 60.f, 60.f));
 	TriggerCapsule->SetCapsuleSize(60.f, 60.f);
 
-	// ¼±ÅÃ Æ®¸®°Å ÁöÁ¤
+	// ì„ íƒ íŠ¸ë¦¬ê±° ì§€ì •
 	ResolveTriggerComponent();
 	if (Trigger)
 	{
@@ -54,7 +54,7 @@ void APuzzlePipeIn::BeginPlay()
 
 	ApplyTriggerCollisionDefaults(Trigger);
 
-	// Áßº¹ ¹ÙÀÎµù ¹æÁö
+	// ì¤‘ë³µ ë°”ì¸ë”© ë°©ì§€
 	Trigger->OnComponentBeginOverlap.RemoveDynamic(this, &ThisClass::OnTriggerBeginOverlap);
 	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerBeginOverlap);
 }
@@ -63,11 +63,11 @@ void APuzzlePipeIn::ResolveTriggerComponent()
 {
 	Trigger = nullptr;
 
-	// Æ®¸®°Å µÎ°¡Áö ¼³Á¤
+	// íŠ¸ë¦¬ê±° ë‘ê°€ì§€ ì„¤ì •
 	if (TriggerBox)     TriggerBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	if (TriggerCapsule) TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// ¼±ÅÃµÈ °Í ÄÑ±â
+	// ì„ íƒëœ ê²ƒ ì¼œê¸°
 	if (TriggerShape == EPuzzleTriggerShape::Box)
 	{
 		if (TriggerBox)
@@ -83,7 +83,7 @@ void APuzzlePipeIn::ResolveTriggerComponent()
 		}
 	}
 
-	// Æú¹é
+	// í´ë°±
 	if (!Trigger)
 	{
 		if (TriggerCapsule) Trigger = TriggerCapsule;
@@ -122,13 +122,13 @@ void APuzzlePipeIn::OnTriggerBeginOverlap(
 		return;
 	}
 
-	// Á¶°¢ Á¤º¸ ÀúÀå
+	// ì¡°ê° ì •ë³´ ì €ìž¥
 	const FPuzzleId SavedId = Piece->PieceId;
 	TSubclassOf<APuzzlePieceBase> PieceClass = Piece->GetClass();
 
-	// ±âÁ¸ Á¶°¢ Á¦°Å
+	// ê¸°ì¡´ ì¡°ê° ì œê±°
 	Piece->Destroy();
 
-	// Out¿¡¼­ »ý¼º(out¿¡¼­ »ý¼ºÈÄ Áß·ÂÀ¸·Î ³«ÇÏ)
+	// Outì—ì„œ ìƒì„±(outì—ì„œ ìƒì„±í›„ ì¤‘ë ¥ìœ¼ë¡œ ë‚™í•˜)
 	LinkedOutPipe->SpawnPiece(PieceClass, SavedId);
 }

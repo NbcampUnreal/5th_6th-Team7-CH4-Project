@@ -10,11 +10,11 @@ class UCapsuleComponent;
 class UShapeComponent;
 class UPrimitiveComponent;
 class UStaticMeshComponent;
-class USceneComponent; // ¼öÁ¤/Ãß°¡: forward declare Ãß°¡ (Root¿¡ »ç¿ë)
+class USceneComponent; // ìˆ˜ì •/ì¶”ê°€: forward declare ì¶”ê°€ (Rootì— ì‚¬ìš©)
 
-// ¹öÆ° »óÅÂ°¡ ¹Ù²î¸é ¼­¹ö¿¡ ¾Ë¸²
-// ButtonÀº ¾î¶² ¹öÆ°ÀÎÁö
-// bPressed´Â ÇöÀç ´­¸²»óÅÂ ÆÇ´Ü
+// ë²„íŠ¼ ìƒíƒœê°€ ë°”ë€Œë©´ ì„œë²„ì— ì•Œë¦¼
+// Buttonì€ ì–´ë–¤ ë²„íŠ¼ì¸ì§€
+// bPressedëŠ” í˜„ì¬ ëˆŒë¦¼ìƒíƒœ íŒë‹¨
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPuzzleButtonPressedChanged, APuzzleColorButton*, Button, bool, bPressed);
 
 UCLASS()
@@ -25,22 +25,22 @@ class ALKAID_API APuzzleColorButton : public AActor
 public:
 	APuzzleColorButton();
 
-	// ÇöÀç ´­¸² »óÅÂ¸¦ ¹İÈ¯ÇÕ´Ï´Ù
-	// Å¬¶óÀÌ¾ğÆ®´Â ÀÌ °ªÀ» º¸±â¸¸ ÇÕ´Ï´Ù
+	// í˜„ì¬ ëˆŒë¦¼ ìƒíƒœë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤
+	// í´ë¼ì´ì–¸íŠ¸ëŠ” ì´ ê°’ì„ ë³´ê¸°ë§Œ í•©ë‹ˆë‹¤
 	UFUNCTION(BlueprintCallable, Category = "Puzzle|Button")
 	bool IsPressed() const { return bPressed; }
 
-	// ¹öÆ° ½Äº°ÀÚ ex: 1_1_RedButton
-	// ·¹º§ ÀÎ½ºÅÏ½º¸¶´Ù ÀÔ·Â
+	// ë²„íŠ¼ ì‹ë³„ì ex: 1_1_RedButton
+	// ë ˆë²¨ ì¸ìŠ¤í„´ìŠ¤ë§ˆë‹¤ ì…ë ¥
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Puzzle|Button")
 	FPuzzleId ButtonId;
 
-	// ´­¸² »óÅÂ°¡ ¹Ù²î¸é È£Ãâ
-	// °ÔÀÓ¸ğµå°¡ ¼­¹ö¿¡¼­ ¹ÙÀÎµù
+	// ëˆŒë¦¼ ìƒíƒœê°€ ë°”ë€Œë©´ í˜¸ì¶œ
+	// ê²Œì„ëª¨ë“œê°€ ì„œë²„ì—ì„œ ë°”ì¸ë”©
 	UPROPERTY(BlueprintAssignable, Category = "Puzzle|Button")
 	FOnPuzzleButtonPressedChanged OnPressedChanged;
 
-	// ´­¸² ¿¬ÃâÀ» ºí·çÇÁ¸°Æ®¿¡¼­ Ã³¸®ÇÏ°í ½ÍÀ» ¶§ »ç¿ë. ¾È¾²Áö¸¸ È¤½Ã¸ô¶ó¼­ ±¸Çö
+	// ëˆŒë¦¼ ì—°ì¶œì„ ë¸”ë£¨í”„ë¦°íŠ¸ì—ì„œ ì²˜ë¦¬í•˜ê³  ì‹¶ì„ ë•Œ ì‚¬ìš©. ì•ˆì“°ì§€ë§Œ í˜¹ì‹œëª°ë¼ì„œ êµ¬í˜„
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Puzzle|Button")
 	void BP_OnPressedVisualChanged(bool bNowPressed);
@@ -49,77 +49,77 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<USceneComponent> Root = nullptr;
 
-	// ¹öÆ° ¿ÜÇü ¸Ş½Ã
-	// ¸Ş½¬¿¡ Ãæµ¹Àº ºÒÇÊ¿äÇÏ¹Ç·Î, ²¨µÒ
+	// ë²„íŠ¼ ì™¸í˜• ë©”ì‹œ
+	// ë©”ì‰¬ì— ì¶©ëŒì€ ë¶ˆí•„ìš”í•˜ë¯€ë¡œ, êº¼ë‘ 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> Visual = nullptr;
 
-	// ¹öÆ° À§¸¦ °¨ÁöÇÏ´Â Æ®¸®°Å
-	// ¿À¹ö·¦À¸·Î ´­¸²À» ÆÇÁ¤
+	// ë²„íŠ¼ ìœ„ë¥¼ ê°ì§€í•˜ëŠ” íŠ¸ë¦¬ê±°
+	// ì˜¤ë²„ë©ìœ¼ë¡œ ëˆŒë¦¼ì„ íŒì •
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UShapeComponent> Trigger = nullptr; // (Box/Capsule °ø¿ë)
+	TObjectPtr<UShapeComponent> Trigger = nullptr; // (Box/Capsule ê³µìš©)
 
-	// Box Æ®¸®°Å¸¦ ¾µ ¶§¸¸ »ç¿ë (BP¿¡¼­ µÑ ´Ù ºÙ¿©³õ°í ¼±ÅÃ °¡´É)
+	// Box íŠ¸ë¦¬ê±°ë¥¼ ì“¸ ë•Œë§Œ ì‚¬ìš© (BPì—ì„œ ë‘˜ ë‹¤ ë¶™ì—¬ë†“ê³  ì„ íƒ ê°€ëŠ¥)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UBoxComponent> TriggerBox = nullptr; // Box Æ®¸®°Å ÂüÁ¶¿ë
+	TObjectPtr<UBoxComponent> TriggerBox = nullptr; // Box íŠ¸ë¦¬ê±° ì°¸ì¡°ìš©
 
-	// Capsule Æ®¸®°Å¸¦ ¾µ ¶§¸¸ »ç¿ë (BP¿¡¼­ µÑ ´Ù ºÙ¿©³õ°í ¼±ÅÃ °¡´É)
+	// Capsule íŠ¸ë¦¬ê±°ë¥¼ ì“¸ ë•Œë§Œ ì‚¬ìš© (BPì—ì„œ ë‘˜ ë‹¤ ë¶™ì—¬ë†“ê³  ì„ íƒ ê°€ëŠ¥)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UCapsuleComponent> TriggerCapsule = nullptr; // Capsule Æ®¸®°Å ÂüÁ¶¿ë
+	TObjectPtr<UCapsuleComponent> TriggerCapsule = nullptr; // Capsule íŠ¸ë¦¬ê±° ì°¸ì¡°ìš©
 
-	// PuzzleTypes.h¿¡ ¸¸µç enum »ç¿ë
+	// PuzzleTypes.hì— ë§Œë“  enum ì‚¬ìš©
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Puzzle")
 	EPuzzleTriggerShape TriggerShape = EPuzzleTriggerShape::Box;
 
-	// ´­¸² »óÅÂ
-	// ¼­¹ö°¡ °ªÀ» ¹Ù²Ù°í Å¬¶óÀÌ¾ğÆ®¿¡ º¹Á¦
+	// ëˆŒë¦¼ ìƒíƒœ
+	// ì„œë²„ê°€ ê°’ì„ ë°”ê¾¸ê³  í´ë¼ì´ì–¸íŠ¸ì— ë³µì œ
 	UPROPERTY(ReplicatedUsing = OnRep_Pressed, VisibleAnywhere, BlueprintReadOnly, Category = "Puzzle|Button")
 	bool bPressed = false;
 
-	// Æ¯Á¤ ÅÂ±×¸¸ ´­¸²À¸·Î ÀÎÁ¤ÇÏ°í ½ÍÀ» ¶§ ¾¸(2-3¿¡¼­, ¹öÆ°¿¡ ¹°Ã¼¸¦ ¿Ã·Á ÀÛµ¿ÇÏ°ÔÇÏ´Â°ÍÀ» ¹æÁö)
-	// ºñ¿öµÎ¸é ÅÂ±× Ã¼Å© x
+	// íŠ¹ì • íƒœê·¸ë§Œ ëˆŒë¦¼ìœ¼ë¡œ ì¸ì •í•˜ê³  ì‹¶ì„ ë•Œ ì”€(2-3ì—ì„œ, ë²„íŠ¼ì— ë¬¼ì²´ë¥¼ ì˜¬ë ¤ ì‘ë™í•˜ê²Œí•˜ëŠ”ê²ƒì„ ë°©ì§€)
+	// ë¹„ì›Œë‘ë©´ íƒœê·¸ ì²´í¬ x
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Puzzle|Button|Filter")
 	FName RequiredActorTag = NAME_None;
 
 protected:
 	virtual void BeginPlay() override;
 
-	// bPressed°¡ º¹Á¦µÇ¾î ¹Ù²î¸é È£Ãâ
+	// bPressedê°€ ë³µì œë˜ì–´ ë°”ë€Œë©´ í˜¸ì¶œ
 	UFUNCTION()
 	void OnRep_Pressed();
 
-	// Æ®¸®°Å¿¡ ¹«¾ğ°¡ µé¾î¿À¸é È£Ãâ
-	// ¼­¹ö¿¡¼­¸¸ ´­¸² Ä«¿îÆ®¸¦ ¿Ã¸²
+	// íŠ¸ë¦¬ê±°ì— ë¬´ì–¸ê°€ ë“¤ì–´ì˜¤ë©´ í˜¸ì¶œ
+	// ì„œë²„ì—ì„œë§Œ ëˆŒë¦¼ ì¹´ìš´íŠ¸ë¥¼ ì˜¬ë¦¼
 	UFUNCTION()
 	void OnTriggerBeginOverlap(
 		UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 		bool bFromSweep, const FHitResult& SweepResult);
 
-	// Æ®¸®°Å¿¡¼­ ¹«¾ğ°¡ ³ª°¡¸é È£Ãâ
-	// ¼­¹ö¿¡¼­¸¸ ´­¸² Ä«¿îÆ®¸¦ ³»¸²
+	// íŠ¸ë¦¬ê±°ì—ì„œ ë¬´ì–¸ê°€ ë‚˜ê°€ë©´ í˜¸ì¶œ
+	// ì„œë²„ì—ì„œë§Œ ëˆŒë¦¼ ì¹´ìš´íŠ¸ë¥¼ ë‚´ë¦¼
 	UFUNCTION()
 	void OnTriggerEndOverlap(
 		UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	// ´­¸² ÀÎÁ¤ ´ë»ó °Ë»ç
+	// ëˆŒë¦¼ ì¸ì • ëŒ€ìƒ ê²€ì‚¬
 	bool IsValidActivator(AActor* OtherActor) const;
 
-	// ¼­¹ö¿¡¼­ ´­¸² »óÅÂ¸¦ º¯°æ
-	// »óÅÂº¯È¯ ½Ã µ¨¸®°ÔÀÌÆ®¸¦ ¹æ¼Û
+	// ì„œë²„ì—ì„œ ëˆŒë¦¼ ìƒíƒœë¥¼ ë³€ê²½
+	// ìƒíƒœë³€í™˜ ì‹œ ë¸ë¦¬ê²Œì´íŠ¸ë¥¼ ë°©ì†¡
 	void ServerSetPressed(bool bNewPressed);
 
-	// ¼±ÅÃµÈ Æ®¸®°Å¸¦ Ã£¾Æ¼­ ¼³Á¤
-	// Box ¶Ç´Â Capsule Áß ÇÏ³ª¸¦ Trigger·Î ÁöÁ¤
-	void ResolveTriggerComponent(); // Box/Capsule ÀÚµ¿ ¼±ÅÃÀ» À§ÇÑ ÇÔ¼ö ¼±¾ğ
+	// ì„ íƒëœ íŠ¸ë¦¬ê±°ë¥¼ ì°¾ì•„ì„œ ì„¤ì •
+	// Box ë˜ëŠ” Capsule ì¤‘ í•˜ë‚˜ë¥¼ Triggerë¡œ ì§€ì •
+	void ResolveTriggerComponent(); // Box/Capsule ìë™ ì„ íƒì„ ìœ„í•œ í•¨ìˆ˜ ì„ ì–¸
 
 public:
-	// ³×Æ®¿öÅ© º¹Á¦¸¦ À§ÇØ ÇÊ¿äÇÑ ÇÔ¼ö
+	// ë„¤íŠ¸ì›Œí¬ ë³µì œë¥¼ ìœ„í•´ í•„ìš”í•œ í•¨ìˆ˜
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
-	// ¼­¹ö¿¡¼­¸¸ ¾²´Â Ä«¿îÆ®
-	// ¿©·¯ °³°¡ µ¿½Ã¿¡ ¿Ã¶ó°¡µµ ´­¸²À» À¯ÁöÇÏ±â À§ÇÔ
+	// ì„œë²„ì—ì„œë§Œ ì“°ëŠ” ì¹´ìš´íŠ¸
+	// ì—¬ëŸ¬ ê°œê°€ ë™ì‹œì— ì˜¬ë¼ê°€ë„ ëˆŒë¦¼ì„ ìœ ì§€í•˜ê¸° ìœ„í•¨
 	int32 OverlapCount = 0;
 };

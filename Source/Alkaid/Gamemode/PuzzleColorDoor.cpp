@@ -3,34 +3,34 @@
 
 APuzzleColorDoor::APuzzleColorDoor()
 {
-	// Æ½ Ã¼Å©·Î ¾ÈÇÔ (¸Þ¸ð¸® »ç¿ëÁÙÀÏ ¸ñÀû)
+	// í‹± ì²´í¬ë¡œ ì•ˆí•¨ (ë©”ëª¨ë¦¬ ì‚¬ìš©ì¤„ì¼ ëª©ì )
 	PrimaryActorTick.bCanEverTick = false;
 
-	// ¸ÖÆ¼¿¡¼­ ³×Æ®¿öÅ©·Î º¹Á¦
+	// ë©€í‹°ì—ì„œ ë„¤íŠ¸ì›Œí¬ë¡œ ë³µì œ
 	bReplicates = true;
 
-	// ¹® ¿ÜÇü ¸Þ½Ã ÄÄÆ÷³ÍÆ®¸¦ ¸¸µì´Ï´Ù
+	// ë¬¸ ì™¸í˜• ë©”ì‹œ ì»´í¬ë„ŒíŠ¸ë¥¼ ë§Œë“­ë‹ˆë‹¤
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
 
-	// ±âº»ÀûÀÎ ÄÝ¸®Àü ¼³Á¤ÀÔ´Ï´Ù
-	// ºí·çÇÁ¸°Æ®¿¡¼­ º¯°æ°¡´É
+	// ê¸°ë³¸ì ì¸ ì½œë¦¬ì „ ì„¤ì •ìž…ë‹ˆë‹¤
+	// ë¸”ë£¨í”„ë¦°íŠ¸ì—ì„œ ë³€ê²½ê°€ëŠ¥
 	Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 
-	// ¸Þ½¬¿¡ ¿À¹ö·¦ ÀÌº¥Æ®°¡ ºÒÇÊ¿ä
+	// ë©”ì‰¬ì— ì˜¤ë²„ëž© ì´ë²¤íŠ¸ê°€ ë¶ˆí•„ìš”
 	Mesh->SetGenerateOverlapEvents(false);
 }
 
 void APuzzleColorDoor::OpenDoor()
 {
-	// ¹® Á¦°Å ÆÇ´ÜÀº ¼­¹ö ´ã´ç
+	// ë¬¸ ì œê±° íŒë‹¨ì€ ì„œë²„ ë‹´ë‹¹
 
 	if (!HasAuthority())
 	{
 		return;
 	}
 
-	// ¹®¿­¸² = Á¦°ÅÃ³¸®
-	// ¼­¹ö¿¡¼­ DestroyÇÏ¸é Å¬¶óÀÌ¾ðÆ®¿¡µµ ¹Ý¿µ. ÃßÈÄ º¯°æ°¡´É
+	// ë¬¸ì—´ë¦¼ = ì œê±°ì²˜ë¦¬
+	// ì„œë²„ì—ì„œ Destroyí•˜ë©´ í´ë¼ì´ì–¸íŠ¸ì—ë„ ë°˜ì˜. ì¶”í›„ ë³€ê²½ê°€ëŠ¥
 	Destroy();
 }

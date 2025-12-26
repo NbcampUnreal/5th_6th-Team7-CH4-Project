@@ -7,27 +7,27 @@ APuzzlePieceBase::APuzzlePieceBase()
 	PrimaryActorTick.bCanEverTick = false;
 
 	bReplicates = true;
-	SetReplicateMovement(true);   
-	NetUpdateFrequency = 60.f;     
+	SetReplicateMovement(true);
+	NetUpdateFrequency = 60.f;
 	MinNetUpdateFrequency = 30.f;
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
 
-	Mesh->SetIsReplicated(true); 
+	Mesh->SetIsReplicated(true);
 	Mesh->SetCollisionProfileName(TEXT("PhysicsActor"));
 	Mesh->SetGenerateOverlapEvents(true);
 
-	// »ý¼ºÀÚ¿¡¼­´Â ±âº»°ª¸¸, ½ÇÁ¦ ½Ã¹Ä ON/OFF´Â BeginPlay¿¡¼­ ±ÇÇÑÀ¸·Î °áÁ¤
-	Mesh->SetSimulatePhysics(false);        
-	Mesh->SetEnableGravity(false);           
+	// ìƒì„±ìžì—ì„œëŠ” ê¸°ë³¸ê°’ë§Œ, ì‹¤ì œ ì‹œë®¬ ON/OFFëŠ” BeginPlayì—ì„œ ê¶Œí•œìœ¼ë¡œ ê²°ì •
+	Mesh->SetSimulatePhysics(false);
+	Mesh->SetEnableGravity(false);
 }
 
 void APuzzlePieceBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ¹°¸®/Áß·ÂÀº ¼­¹öÃ³¸®
+	// ë¬¼ë¦¬/ì¤‘ë ¥ì€ ì„œë²„ì²˜ë¦¬
 	if (HasAuthority())
 	{
 		Mesh->SetSimulatePhysics(true);
@@ -35,7 +35,7 @@ void APuzzlePieceBase::BeginPlay()
 	}
 	else
 	{
-		// Å¬¶ó´Â ¼­¹ö ¹°¸® °á°ú¸¦ º¹Á¦
+		// í´ë¼ëŠ” ì„œë²„ ë¬¼ë¦¬ ê²°ê³¼ë¥¼ ë³µì œ
 		Mesh->SetSimulatePhysics(false);
 		Mesh->SetEnableGravity(false);
 	}
@@ -45,5 +45,5 @@ void APuzzlePieceBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(APuzzlePieceBase, PieceId); 
+	DOREPLIFETIME(APuzzlePieceBase, PieceId);
 }
