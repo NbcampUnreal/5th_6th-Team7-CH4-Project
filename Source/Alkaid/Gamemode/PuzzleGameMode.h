@@ -7,6 +7,9 @@
 class APuzzleColorButton;
 class APuzzleColorDoor;
 
+class APuzzleSignBase;
+class APuzzleReceiverBox;
+
 UCLASS()
 class ALKAID_API APuzzleGameMode : public AGameModeBase
 {
@@ -55,4 +58,26 @@ private:
 private:
 	// 1_1 퍼즐 규칙
 	void HandlePuzzle_1_1(APuzzleColorButton* Button);
+
+private:
+	// 1_2 퍼즐용
+	UPROPERTY()
+	TMap<FName, TObjectPtr<APuzzleSignBase>> SignSlotById; 
+
+	UPROPERTY()
+	TMap<FName, TObjectPtr<APuzzleReceiverBox>> ReceiverById; 
+
+	// 1_2에서 선택된 정답 3개를 기록(문 열림 조건 체크용)
+	UPROPERTY()
+	TSet<FName> SolvedReceiverIds_1_2; 
+
+	// 1_2 초기화(랜덤 3개 선택 후 슬롯/리시버 세팅)
+	void InitPuzzle_1_2(); 
+
+	// 리시버 solved 이벤트 수신
+	UFUNCTION()
+	void OnReceiverSolved(APuzzleReceiverBox* Receiver, bool bSolved); 
+
+	// 수집(1_2 전용)
+	void CollectPuzzle12ActorsAndBind(); 
 };

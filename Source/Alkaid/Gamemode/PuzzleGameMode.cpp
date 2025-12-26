@@ -4,6 +4,9 @@
 #include "Gamemode/PuzzleColorButton.h"
 #include "Gamemode/PuzzleColorDoor.h"
 
+#include "Gamemode/PuzzleSignBase.h"
+#include "Gamemode/PuzzleReceiverBox.h"
+
 APuzzleGameMode::APuzzleGameMode()
 {
 }
@@ -19,6 +22,10 @@ void APuzzleGameMode::BeginPlay()
 	}
 
 	CollectActorsAndBind();
+
+	// 1_2 퍼즐 준비
+	CollectPuzzle12ActorsAndBind();
+	InitPuzzle_1_2();
 }
 
 void APuzzleGameMode::CollectActorsAndBind()
@@ -100,9 +107,6 @@ void APuzzleGameMode::OnButtonPressedChanged(APuzzleColorButton* Button, bool bP
 		HandlePuzzle_1_1(Button);
 		return;
 	}
-
-	// 다음 퍼즐들은 여기에 추가
-	// if (PuzzleKey == TEXT("1_2")) { HandlePuzzle_1_2(Button); return; }
 }
 
 FString APuzzleGameMode::GetPuzzleKeyFromId(const FName& InId) const
@@ -179,4 +183,163 @@ void APuzzleGameMode::HandlePuzzle_1_1(APuzzleColorButton* Button)
 	const FName DoorId = MakeDoorIdFromButtonId_1_1(ButtonId);
 
 	OpenDoorById(DoorId);
+}
+
+// 1_2 로직
+
+void APuzzleGameMode::CollectPuzzle12ActorsAndBind()
+{
+	SignSlotById.Empty();          
+	ReceiverById.Empty();          
+	SolvedReceiverIds_1_2.Empty(); 
+
+	// SignSlot 수집
+	for (TActorIterator<APuzzleSignBase> It(GetWorld()); It; ++It) 
+	{
+		APuzzleSignBase* Sign = *It;
+		if (!IsValid(Sign))
+		{
+			continue;
+		}
+
+		const FName SlotId = Sign->SignSlotId.Id;
+		if (SlotId.IsNone())
+		{
+			continue;
+		}
+
+		// 1_2_SignSlot 로 시작하는 것만 사용(다른 퍼즐 대비)
+		if (!SlotId.ToString().StartsWith(TEXT("1_2_SignSlot")))
+		{
+			continue;
+		}
+
+		SignSlotById.Add(SlotId, Sign);
+	}
+
+	// Receiver 수집 및 이벤트 바인딩
+	for (TActorIterator<APuzzleReceiverBox> It(GetWorld()); It; ++It) 
+	{
+		APuzzleReceiverBox* Receiver = *It;
+		if (!IsValid(Receiver))
+		{
+			continue;
+		}
+
+		const FName Rid = Receiver->ReceiverId.Id;
+		if (Rid.IsNone())
+		{
+			continue;
+		}
+
+		if (!Rid.ToString().StartsWith(TEXT("1_2_Receiver")))
+		{
+			continue;
+		}
+
+		ReceiverById.Add(Rid, Receiver);
+
+		Receiver->OnSolved.RemoveDynamic(this, &ThisClass::OnReceiverSolved); 
+		Receiver->OnSolved.AddDynamic(this, &ThisClass::OnReceiverSolved);    
+	}
+}
+
+void APuzzleGameMode::InitPuzzle_1_2()
+{
+	//필수 3개가 없으면 진행 불가
+	if (SignSlotById.Num() < 3 || ReceiverById.Num() < 3)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Puzzle 1_2: Need 3 SignSlots and 3 Receivers."));
+		return;
+	}
+
+	//6개 후보 ID 풀
+	TArray<FName> Candidates;
+	for (int32 i = 1; i <= 6; ++i)
+	{
+		Candidates.Add(FName(*FString::Printf(TEXT("1_2_Piece_%d"), i)));
+	}
+
+	//중복 없이 3개 선택
+	TArray<FName> Picked; 
+	while (Picked.Num() < 3 && Candidates.Num() > 0)
+	{
+		const int32 Idx = FMath::RandRange(0, Candidates.Num() - 1);
+		Picked.Add(Candidates[Idx]);
+		Candidates.RemoveAtSwap(Idx);
+	}
+
+	if (Picked.Num() != 3)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Puzzle 1_2: Failed to pick 3 ids."));
+		return;
+	}
+
+	// 슬롯/리시버를 “정렬된 키” 기준으로 안정적으로 매칭
+	TArray<FName> SlotKeys;
+	SignSlotById.GetKeys(SlotKeys);
+	SlotKeys.Sort(FNameLexicalLess()); 
+
+	TArray<FName> ReceiverKeys;
+	ReceiverById.GetKeys(ReceiverKeys);
+	ReceiverKeys.Sort(FNameLexicalLess()); 
+
+	for (int32 i = 0; i < 3; ++i)
+	{
+		APuzzleSignBase* Slot = SignSlotById[SlotKeys[i]].Get();
+		APuzzleReceiverBox* Receiver = ReceiverById[ReceiverKeys[i]].Get();
+
+		if (!IsValid(Slot) || !IsValid(Receiver))
+		{
+			continue;
+		}
+
+		// 서버에서 DisplayId / ExpectedId 세팅
+		Slot->ServerSetDisplayId(FPuzzleId(Picked[i]));  // 서버 세팅
+
+		Receiver->ExpectedId = FPuzzleId(Picked[i]);   
+		Receiver->bSolved = false;                     // 초기화(이전값 방지)
+	}
+
+	SolvedReceiverIds_1_2.Empty();
+}
+
+void APuzzleGameMode::OnReceiverSolved(APuzzleReceiverBox* Receiver, bool bSolved)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (!IsValid(Receiver))
+	{
+		return;
+	}
+
+	const FName Rid = Receiver->ReceiverId.Id;
+	if (Rid.IsNone())
+	{
+		return;
+	}
+
+	// 1_2 리시버만 처리
+	if (!Rid.ToString().StartsWith(TEXT("1_2_Receiver")))
+	{
+		return;
+	}
+
+	if (bSolved)
+	{
+		SolvedReceiverIds_1_2.Add(Rid); // 
+	}
+	else
+	{
+		SolvedReceiverIds_1_2.Remove(Rid); // (안전)
+	}
+
+	// 3개 solved면 문 열기
+	if (SolvedReceiverIds_1_2.Num() >= 3)
+	{
+		OpenDoorById(FName(TEXT("1_2_YellowDoor"))); 
+	}
 }
