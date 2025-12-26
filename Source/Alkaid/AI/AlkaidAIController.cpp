@@ -15,7 +15,7 @@ void AAlkaidAIController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 	
 	//서버에서 실행중인지 확인
-	if (!HasAuthority())return;
+	//if (!HasAuthority())return;
 
 	//BT 없으면 종료함
 	//if (!BehaviorTreeAsset)return;
@@ -26,5 +26,5 @@ void AAlkaidAIController::OnPossess(APawn* InPawn)
 	}
 
 	//BT실행
-	RunBehaviorTree(BehaviorTreeAsset.Get());
+	//RunBehaviorTree(BehaviorTreeAsset.Get());
 }
