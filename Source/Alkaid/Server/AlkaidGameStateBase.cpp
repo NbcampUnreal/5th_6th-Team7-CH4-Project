@@ -4,7 +4,6 @@
 AAlkaidGameStateBase::AAlkaidGameStateBase()
 {
 	RoomState = ERoomState::Free;
-	RoomLeaderPS = nullptr;
 	bStartReady = false;
 	RoomPlayerCount = 0;
 	RoomReadyCount = 0;
@@ -14,9 +13,30 @@ void AAlkaidGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AAlkaidGameStateBase, RoomState)
-	DOREPLIFETIME(AAlkaidGameStateBase, RoomLeaderPS)
-	DOREPLIFETIME(AAlkaidGameStateBase, bStartReady)
-	DOREPLIFETIME(AAlkaidGameStateBase, RoomPlayerCount)
-	DOREPLIFETIME(AAlkaidGameStateBase, RoomReadyCount)
+	DOREPLIFETIME(AAlkaidGameStateBase, RoomState);
+	DOREPLIFETIME(AAlkaidGameStateBase, bStartReady);
+	DOREPLIFETIME(AAlkaidGameStateBase, RoomPlayerCount);
+	DOREPLIFETIME(AAlkaidGameStateBase, RoomReadyCount);
+}
+
+void AAlkaidGameStateBase::OnRep_RoomState()
+{
+	NotifyLobbyInfoChanged();
+}
+
+void AAlkaidGameStateBase::OnRep_StartReady()
+{
+	NotifyLobbyInfoChanged();
+
+}
+
+void AAlkaidGameStateBase::OnRep_RoomCount()
+{
+	NotifyLobbyInfoChanged();
+
+}
+
+void AAlkaidGameStateBase::NotifyLobbyInfoChanged()
+{
+	OnLobbyInfoChanged.Broadcast();
 }

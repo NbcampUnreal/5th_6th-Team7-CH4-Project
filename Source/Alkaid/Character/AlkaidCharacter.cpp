@@ -11,13 +11,64 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Net/UnrealNetwork.h"
 #include "Components/PrimitiveComponent.h"
+#include "Items/AKComponents/ItemComponent.h"
+#include "Items/AKComponents/BuffComponent.h"
+
+/*static FString RoleToStr(ENetRole Role)
+{
+	switch (Role)
+	{
+	case ROLE_None: return TEXT("None");
+	case ROLE_SimulatedProxy: return TEXT("SimProxy");
+	case ROLE_AutonomousProxy: return TEXT("AutoProxy");
+	case ROLE_Authority: return TEXT("Authority");
+	default: return TEXT("Unknown");
+	}
+}
+
+static FString NetModeToStr(ENetMode NM)
+{
+	switch (NM)
+	{
+	case NM_Standalone: return TEXT("Standalone");
+	case NM_DedicatedServer: return TEXT("DedicatedServer");
+	case NM_ListenServer: return TEXT("ListenServer");
+	case NM_Client: return TEXT("Client");
+	default: return TEXT("Unknown");
+	}
+}
+
+#define AK_LOG_CTX(Format, ...) \
+do { \
+	const UWorld* W__ = GetWorld(); \
+	const ENetMode NM__ = W__ ? W__->GetNetMode() : NM_Standalone; \
+	UE_LOG(LogTemp, Warning, TEXT("[%s] %s | Local=%d Auth=%d Role=%s Remote=%s Ctrl=%s Owner=%s | " Format), \
+		*NetModeToStr(NM__), \
+		*GetNameSafe(this), \
+		IsLocallyControlled(), \
+		HasAuthority(), \
+		*RoleToStr(GetLocalRole()), \
+		*RoleToStr(GetRemoteRole()), \
+		*GetNameSafe(GetController()), \
+		*GetNameSafe(GetOwner()), \
+		##__VA_ARGS__); \
+} while(0)
+
+#define AK_LOG_SPEED(Tag) \
+do { \
+	const float WS__ = GetCharacterMovement() ? GetCharacterMovement()->MaxWalkSpeed : -1.f; \
+	const float Vel__ = GetVelocity().Size2D(); \
+	AK_LOG_CTX(TEXT("%s | bIsSprinting=%d MaxWalkSpeed=%.1f Vel2D=%.1f"), TEXT(Tag), bIsSprinting, WS__, Vel__); \
+} while(0)*/
 
 // Sets default values
 AAlkaidCharacter::AAlkaidCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -40,6 +91,14 @@ AAlkaidCharacter::AAlkaidCharacter()
 	StatComponent->SetIsReplicated(true);
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 	EquipmentComponent->SetIsReplicated(true);
+
+	// ItemComponent 생성및 초기화
+	ItemComponent = CreateDefaultSubobject<UItemComponent>(TEXT("ItemComponent"));
+	ItemComponent->SetIsReplicated(true);
+
+	// BuffComponent 생성및 초기화
+	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	BuffComponent->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned
@@ -52,12 +111,18 @@ void AAlkaidCharacter::BeginPlay()
 	if (IsLocallyControlled() == true)
 	{
 		APlayerController* PC = Cast<APlayerController>(GetController());
-		checkf(IsValid(PC) == true, TEXT("PlayerController is invalid."));
+		//checkf(IsValid(PC) == true, TEXT("PlayerController is invalid."));
 
 		UEnhancedInputLocalPlayerSubsystem* EILPS = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
-		checkf(IsValid(EILPS) == true, TEXT("EnhancedInputLocalPlayerSubsystem is invalid."));
+		//checkf(IsValid(EILPS) == true, TEXT("EnhancedInputLocalPlayerSubsystem is invalid."));
 
 		EILPS->AddMappingContext(InputMappingContext, 0);
+		//StaminaWidgetInstance->AddToViewport();
+		if (IsValid(EscWidgetClass) == true)
+		{
+			EscWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), EscWidgetClass);
+
+		}
 	}
 	
 }
@@ -72,22 +137,87 @@ void AAlkaidCharacter::PostInitializeComponents()
 		StatComponent->ApplySpeed();
 		StatComponent->ApplyStamina();
 	}
+	if (ItemComponent)
+	{
+		ItemComponent->AKCharacter = this;
+	}
+	if (BuffComponent)
+	{
+		BuffComponent->AKCharacter = this;
+		BuffComponent->AKStatComp = StatComponent;
+		BuffComponent->SetInitialSpeeds(
+			GetCharacterMovement()->MaxWalkSpeed,
+			GetCharacterMovement()->MaxWalkSpeedCrouched
+		);
+	}
 }
 
 void AAlkaidCharacter::ServerUseCandle_Implementation()
 {
-	if (!StatComponent)
+	if (!StatComponent && !ItemComponent)
 		return; 
 	
-	if(StatComponent->GetCandleCount() <= 0)
+	if(ItemComponent->GetCandle() <= 0)
 		return;
 
 	if (StatComponent->IsCandleOnCooldown())
 		return;
 
 	StatComponent->StartCandleCooldown();
-	StatComponent->AddCandleCount(-1);
+	ItemComponent->SpendRound();
 	StatComponent->AddStamina(20.0f);
+
+	/*UE_LOG(LogTemp, Warning, TEXT("[SERVER] After Use: Stamina=%f/%f Candle=%f EndTime=%f"),
+		StatComponent->GetStamina(),
+		StatComponent->GetMaxStamina(),
+		StatComponent->GetCandleCount(),
+		StatComponent->CandleCoolDownEndTime);*/
+	
+}
+
+void AAlkaidCharacter::OnRep_IsSprinting()
+{
+	if (StatComponent)
+	{
+		StatComponent->ApplySpeed();
+	}
+}
+
+void AAlkaidCharacter::SprintSpeed_Server()
+{
+	//AK_LOG_SPEED("SERVER SprintSpeed_Server ENTER");
+
+	if (!HasAuthority())
+		return;
+	if (!StatComponent)
+		return;
+
+	const float NewSpeed = StatComponent->GetFinalMoveSpeed(bIsSprinting);
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+
+	//AK_LOG_CTX(TEXT("SprintSpeed_Server applied: Old=%.1f New=%.1f bIsSprinting=%d"), OldSpeed, NewSpeed, bIsSprinting);
+}
+
+void AAlkaidCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AAlkaidCharacter, bIsSprinting);
+}
+
+void AAlkaidCharacter::ServerSetSprinting_Implementation(bool NewSprinting)
+{
+	if (bIsSprinting == NewSprinting)
+		return;
+
+	bIsSprinting = NewSprinting;
+
+	StatComponent->ApplySpeed();
+
+	//AK_LOG_SPEED("SERVER ServerSetSprinting changed flag");
+
+	//SprintSpeed_Server();
+
+	//AK_LOG_SPEED("SERVER ServerSetSprinting AFTER SprintSpeed_Server");
 }
 
 void AAlkaidCharacter::HandleMoveInput(const FInputActionValue& InValue)
@@ -129,7 +259,20 @@ void AAlkaidCharacter::HandleUsingItemInput(const FInputActionValue& InValue)
 
 void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
 {
-	if(StatComponent->GetCandleCount() <= 0)
+	
+	/*UE_LOG(LogTemp, Warning, TEXT("[INPUT] HandleUsingCandleInput fired. Local=%d HasAuth=%d Role=%d Controller=%s"),
+		IsLocallyControlled(),
+		HasAuthority(),
+		(int32)GetLocalRole(),
+		*GetNameSafe(GetController())
+	);*/
+
+	if (StatComponent->GetStamina() >= StatComponent->GetMaxStamina())
+	{
+		return;
+	}
+	
+	if(ItemComponent->GetCandle() <= 0)
 	{
 		return;
 	}
@@ -153,6 +296,18 @@ void AAlkaidCharacter::HandleEscUIInput(const FInputActionValue& InValue)
 		if (IsValid(EscWidgetInstance))
 		{
 			EscWidgetInstance->AddToViewport();
+			// Add 164~175줄 수정 UI 작업
+			// 마우스 커서를 보이게
+			APlayerController* UIMouse = Cast<APlayerController>(GetController());
+			if (UIMouse)
+			{
+				FInputModeGameAndUI InputUIMode;
+				InputUIMode.SetWidgetToFocus(EscWidgetInstance->TakeWidget()); //포커스 설정, 마우스가 UI를 가리키도록
+				InputUIMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock); //마우스 고정, 화면 밖으로 못나가게
+
+				UIMouse->SetInputMode(InputUIMode); // 입력우선순위 설정
+				UIMouse->bShowMouseCursor = true;
+			} //End
 		}
 	}
 }
@@ -162,10 +317,71 @@ void AAlkaidCharacter::HandleReadyInput(const FInputActionValue& InValue)
 	UE_LOG(LogTemp, Warning, TEXT("Ready Action"));
 }
 
+void AAlkaidCharacter::HandleStartInput(const FInputActionValue& InValue)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Started"));
+}
+
+void AAlkaidCharacter::StartSprint(const FInputActionValue& Invalue)
+{
+	if (!IsLocallyControlled())
+		return;
+
+	if(StatComponent&& StatComponent->GetStamina() <= 0.0f)
+		return;
+
+	bIsSprinting = true;
+	if(StatComponent)
+		StatComponent->ApplySpeed();
+
+	ServerSetSprinting(true);
+
+	//AK_LOG_SPEED("INPUT StartSprint RPC sent");
+}
+
+void AAlkaidCharacter::StopSprint(const FInputActionValue& Invalue)
+{
+	if (!IsLocallyControlled())
+		return;
+
+	bIsSprinting = false;
+	if(StatComponent)
+		StatComponent->ApplySpeed();
+
+	ServerSetSprinting(false);
+	//AK_LOG_SPEED("INPUT StopSprint RPC sent");
+}
+
 // Called every frame
 void AAlkaidCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	/*static float Accum = 0.f;
+	Accum += DeltaTime;
+	if (Accum >= 0.5f)
+	{
+		Accum = 0.f;
+		AK_LOG_SPEED("TICK heartbeat");
+	}*/
+	
+	if(!HasAuthority())
+		return;
+
+	if (bIsSprinting)
+	{
+		const float Speed2D = GetVelocity().Size2D();
+		const bool bIsMoving = Speed2D > 3.0f;
+		if (bIsMoving)
+		{
+			StatComponent->AddStamina(-6 * DeltaTime);
+			if (StatComponent->GetStamina() <= 0.0f)
+			{
+				ServerSetSprinting(false);
+			}
+		}
+	}
+
 
 }
 
@@ -192,5 +408,10 @@ void AAlkaidCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EIC->BindAction(ReadyAction, ETriggerEvent::Started, this, &ThisClass::HandleReadyInput);
 
 	EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::HandleAttackInput);
+
+	EIC->BindAction(StartAction, ETriggerEvent::Started, this, &ThisClass::HandleStartInput);
+
+	EIC->BindAction(SprintAction, ETriggerEvent::Started, this, &ThisClass::StartSprint);
+	EIC->BindAction(SprintAction, ETriggerEvent::Completed, this, &ThisClass::StopSprint);
 }
 

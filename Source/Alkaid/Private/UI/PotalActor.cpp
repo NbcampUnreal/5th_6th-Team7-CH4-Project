@@ -1,7 +1,9 @@
 #include "UI/PotalActor.h"
 #include "Components/BoxComponent.h"
-#include "Components/WidgetComponent.h" // 헤더 추가 필수
+#include "Components/WidgetComponent.h"
 #include "Character/AlkaidCharacter.h"
+#include "Server/MyPlayerState.h"
+#include "UI/Interaction/CommonUserWidget_Interaction.h"
 
 APotalActor::APotalActor()
 {
@@ -13,7 +15,7 @@ APotalActor::APotalActor()
     PotalMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PotalMesh"));
     PotalMesh->SetupAttachment(RootComponent);
 
-    
+    //상호작용 
     InteractionWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionWidgetComponent"));
     InteractionWidgetComponent->SetupAttachment(RootComponent);
     InteractionWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
@@ -68,18 +70,31 @@ void APotalActor::Tick(float DeltaTime)
     }
 }
 
+void APotalActor::PlayInteractionWidgetAnim()
+{
+    if (InteractionWidgetComponent)
+    {
+        UCommonUserWidget_Interaction* InteractionUI = Cast<UCommonUserWidget_Interaction>(InteractionWidgetComponent->GetUserWidgetObject());
+		//Cast로 변환하여 InteractionUI 변수에 할당
+        if (InteractionUI)
+        {
+            InteractionUI->InteractionRotation(); //회전 함수 호출
+        }
+    }
+}
+
 void APotalActor::OnPotalOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     if (AAlkaidCharacter* OverlapInter = Cast<AAlkaidCharacter>(OtherActor))
     {
         if (OverlapInter->IsLocallyControlled() && InteractionWidgetComponent)
         {
-            InteractionWidgetComponent->SetVisibility(true);
+            InteractionWidgetComponent->SetVisibility(true);//위젯 보이기
         }
 
         if (OverlapInter->IsLocallyControlled() && InteractionTextWidgetComponent)
         {
-			InteractionTextWidgetComponent->SetVisibility(true);
+			InteractionTextWidgetComponent->SetVisibility(true); //위젯 보이기
         }
     }
 }
@@ -90,12 +105,12 @@ void APotalActor::OnPotalOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor*
     {
         if (OverlapInter->IsLocallyControlled() && InteractionWidgetComponent)
         {
-            InteractionWidgetComponent->SetVisibility(false);
+            InteractionWidgetComponent->SetVisibility(false); //위젯 숨기기
         }
 
         if (OverlapInter->IsLocallyControlled() && InteractionTextWidgetComponent)
         {
-            InteractionTextWidgetComponent->SetVisibility(false);
+            InteractionTextWidgetComponent->SetVisibility(false); //위젯 숨기기
         }
     }
 }
