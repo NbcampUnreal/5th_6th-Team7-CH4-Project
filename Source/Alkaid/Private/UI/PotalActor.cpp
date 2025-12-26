@@ -58,6 +58,7 @@ void APotalActor::Tick(float DeltaTime)
     if (InteractionWidgetComponent && InteractionWidgetComponent->IsVisible())
     {
         APlayerController* CameraRotation = GetWorld()->GetFirstPlayerController();
+
         if (CameraRotation && CameraRotation->PlayerCameraManager)
         {
             FVector CameraLocation = CameraRotation->PlayerCameraManager->GetCameraLocation();

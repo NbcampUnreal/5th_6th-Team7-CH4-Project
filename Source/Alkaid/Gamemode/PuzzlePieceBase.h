@@ -15,7 +15,7 @@ class ALKAID_API APuzzlePieceBase : public AActor
 public:
 	APuzzlePieceBase();
 
-	// ÆÛÁñÁ¶°¢ ½Äº°ÀÚ (Ç¥ÁöÆÇ/¸®½Ã¹ö°¡ ¿ä±¸ÇÏ´Â ID¿Í ¸ÅÄª)
+	// í¼ì¦ì¡°ê° ì‹ë³„ì (í‘œì§€íŒ/ë¦¬ì‹œë²„ê°€ ìš”êµ¬í•˜ëŠ” IDì™€ ë§¤ì¹­)
 	UPROPERTY(EditInstanceOnly, Replicated, BlueprintReadOnly, Category = "Puzzle|Piece")
 	FPuzzleId PieceId;
 
@@ -23,8 +23,8 @@ public:
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
 protected:
-	virtual void BeginPlay() override; 
+	virtual void BeginPlay() override;
 
 public:
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override; 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

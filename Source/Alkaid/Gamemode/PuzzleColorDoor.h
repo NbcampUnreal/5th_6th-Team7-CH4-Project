@@ -7,8 +7,8 @@
 
 class UStaticMeshComponent;
 
-// ¹® ¾×ÅÍÀÌ¸ç, ÀÌ ¾×ÅÍÄÚµå¿¡¼­ ÀÛµ¿Á¶°ÇÀÌ ¾øÀ½
-// ¼­¹ö±âÁØÀ¸·Î ÀÛµ¿ÇÏ´Â °ÔÀÓ¸ðµå°¡ ÀÛµ¿Áö½Ã
+// ë¬¸ ì•¡í„°ì´ë©°, ì´ ì•¡í„°ì½”ë“œì—ì„œ ìž‘ë™ì¡°ê±´ì´ ì—†ìŒ
+// ì„œë²„ê¸°ì¤€ìœ¼ë¡œ ìž‘ë™í•˜ëŠ” ê²Œìž„ëª¨ë“œê°€ ìž‘ë™ì§€ì‹œ
 
 UCLASS()
 class ALKAID_API APuzzleColorDoor : public AActor
@@ -18,20 +18,20 @@ class ALKAID_API APuzzleColorDoor : public AActor
 public:
 	APuzzleColorDoor();
 
-	// °ÔÀÓ¸ðµå°¡ È£ÃâÇÏ´Â ÇÔ¼ö
-	// ±âº» µ¿ÀÛÀº ¿­¸²=Destroy
-	// ¸ÖÆ¼¿¡¼­´Â ¼­¹ö¿¡¼­¸¸ È£Ãâ
+	// ê²Œìž„ëª¨ë“œê°€ í˜¸ì¶œí•˜ëŠ” í•¨ìˆ˜
+	// ê¸°ë³¸ ë™ìž‘ì€ ì—´ë¦¼=Destroy
+	// ë©€í‹°ì—ì„œëŠ” ì„œë²„ì—ì„œë§Œ í˜¸ì¶œ
 
 	UFUNCTION(BlueprintCallable, Category = "Puzzle|Door")
 	void OpenDoor();
 
-	// ¹® ½Äº°ÀÚ. ex: 1_1_BlueDoor
-	// ·¹º§¿¡ ¹èÄ¡ÇÑ ÀÎ½ºÅÏ½º¸¶´Ù ´Ù¸£°Ô ÁöÁ¤
+	// ë¬¸ ì‹ë³„ìž. ex: 1_1_BlueDoor
+	// ë ˆë²¨ì— ë°°ì¹˜í•œ ì¸ìŠ¤í„´ìŠ¤ë§ˆë‹¤ ë‹¤ë¥´ê²Œ ì§€ì •
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Puzzle|Door")
 	FPuzzleId DoorId;
 
-	// ¹® ¸Þ½Ã
-	// ¿ÜÇüÀº ºí·çÇÁ¸°Æ®¿¡¼­
+	// ë¬¸ ë©”ì‹œ
+	// ì™¸í˜•ì€ ë¸”ë£¨í”„ë¦°íŠ¸ì—ì„œ
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> Mesh;
 };

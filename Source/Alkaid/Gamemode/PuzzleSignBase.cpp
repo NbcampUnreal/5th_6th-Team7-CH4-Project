@@ -18,6 +18,19 @@ void APuzzleSignBase::OnRep_DisplayId()
 	BP_OnDisplayIdChanged(DisplayId.Id);
 }
 
+void APuzzleSignBase::SetDisplayId(FName NewId)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	DisplayId.Id = NewId;
+
+	// 서버에서도 바로 외형 반영되게 호출
+	BP_OnDisplayIdChanged(DisplayId.Id);
+}
+
 void APuzzleSignBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

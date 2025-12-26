@@ -7,243 +7,243 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h" 
 
-APuzzleColorButton::APuzzleColorButton() 
+APuzzleColorButton::APuzzleColorButton()
 {
-	// Æ½ Ã¼Å©·Î ¾ÈÇÔ (¸Ş¸ğ¸® »ç¿ëÁÙÀÏ ¸ñÀû)
+	// í‹± ì²´í¬ë¡œ ì•ˆí•¨ (ë©”ëª¨ë¦¬ ì‚¬ìš©ì¤„ì¼ ëª©ì )
 	PrimaryActorTick.bCanEverTick = false;
 
-	// ¸ÖÆ¼¿¡¼­ ³×Æ®¿öÅ©·Î º¹Á¦
+	// ë©€í‹°ì—ì„œ ë„¤íŠ¸ì›Œí¬ë¡œ ë³µì œ
 	bReplicates = true;
 
-	// ·çÆ® ÄÄÆ÷³ÍÆ®
+	// ë£¨íŠ¸ ì»´í¬ë„ŒíŠ¸
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(Root);
 
-	// ¿ÜÇü ¸Ş½Ã
+	// ì™¸í˜• ë©”ì‹œ
 	Visual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Visual"));
 	Visual->SetupAttachment(Root);
 
-	// ¿À¹ö·¦ ÀÌº¥Æ®°¡ ºÒÇÊ¿ä
+	// ì˜¤ë²„ë© ì´ë²¤íŠ¸ê°€ ë¶ˆí•„ìš”
 	Visual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Æ®¸®°Å ¹Ú½º
-	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox")); // ¼öÁ¤/Ãß°¡: Box Àü¿ë ÄÄÆ÷³ÍÆ®·Î ºĞ¸®
+	// íŠ¸ë¦¬ê±° ë°•ìŠ¤
+	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox")); // ìˆ˜ì •/ì¶”ê°€: Box ì „ìš© ì»´í¬ë„ŒíŠ¸ë¡œ ë¶„ë¦¬
 	TriggerBox->SetupAttachment(Root);
 
-	// Æ®¸®°Å Ä¸½¶
-	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("TriggerCapsule")); // ¼öÁ¤/Ãß°¡: Capsule ÄÄÆ÷³ÍÆ® Ãß°¡
+	// íŠ¸ë¦¬ê±° ìº¡ìŠ
+	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("TriggerCapsule")); // ìˆ˜ì •/ì¶”ê°€: Capsule ì»´í¬ë„ŒíŠ¸ ì¶”ê°€
 	TriggerCapsule->SetupAttachment(Root);
 
-	// Æ®¸®°Å Å©±â, ºí·çÇÁ¸°Æ®¿¡¼­ Á¶Àı°¡´É
-	TriggerBox->SetBoxExtent(FVector(60.f, 60.f, 30.f)); 
-	TriggerCapsule->SetCapsuleSize(60.f, 30.f);          
+	// íŠ¸ë¦¬ê±° í¬ê¸°, ë¸”ë£¨í”„ë¦°íŠ¸ì—ì„œ ì¡°ì ˆê°€ëŠ¥
+	TriggerBox->SetBoxExtent(FVector(60.f, 60.f, 30.f));
+	TriggerCapsule->SetCapsuleSize(60.f, 30.f);
 
-	// Æ®¸®°Å´Â ¿À¹ö·¦¸¸ ¾²¹Ç·Î QueryOnly
-	TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);      
-	TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);  
+	// íŠ¸ë¦¬ê±°ëŠ” ì˜¤ë²„ë©ë§Œ ì“°ë¯€ë¡œ QueryOnly
+	TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
-	// ±âº»À¸·Î ¸ğµç Ãæµ¹ ¹İÀÀÀ» ¹«½Ã(Ä³¸¯ÅÍ¿¡°Ô °È¾îÂ÷¾ß ³¯¾Æ°¥ÀÌÀ¯¾øÀ½)
-	TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);     
-	TriggerCapsule->SetCollisionResponseToAllChannels(ECR_Ignore); 
+	// ê¸°ë³¸ìœ¼ë¡œ ëª¨ë“  ì¶©ëŒ ë°˜ì‘ì„ ë¬´ì‹œ(ìºë¦­í„°ì—ê²Œ ê±·ì–´ì°¨ì•¼ ë‚ ì•„ê°ˆì´ìœ ì—†ìŒ)
+	TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+	TriggerCapsule->SetCollisionResponseToAllChannels(ECR_Ignore);
 
-	// Pawn°ú PhysicsBody´Â ¿À¹ö·¦
-	TriggerBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);          
-	TriggerBox->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Overlap);   
-	TriggerCapsule->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);      
-	TriggerCapsule->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Overlap); 
+	// Pawnê³¼ PhysicsBodyëŠ” ì˜¤ë²„ë©
+	TriggerBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	TriggerBox->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Overlap);
+	TriggerCapsule->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	TriggerCapsule->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Overlap);
 
-	// ¿À¹ö·¦ ÀÌº¥Æ®
-	TriggerBox->SetGenerateOverlapEvents(true);     
+	// ì˜¤ë²„ë© ì´ë²¤íŠ¸
+	TriggerBox->SetGenerateOverlapEvents(true);
 	TriggerCapsule->SetGenerateOverlapEvents(true);
 
-	// ±âº» ¼±ÅÃ Æ®¸®°Å ÁöÁ¤
-	ResolveTriggerComponent(); // ¼±ÅÃµÈ Æ®¸®°Å¸¦ Trigger·Î ÁöÁ¤
+	// ê¸°ë³¸ ì„ íƒ íŠ¸ë¦¬ê±° ì§€ì •
+	ResolveTriggerComponent(); // ì„ íƒëœ íŠ¸ë¦¬ê±°ë¥¼ Triggerë¡œ ì§€ì •
 
-	// ¿À¹ö·¦ ÀÌº¥Æ® ¹ÙÀÎµù
-	if (Trigger) //nullptr ¹æ¾î
+	// ì˜¤ë²„ë© ì´ë²¤íŠ¸ ë°”ì¸ë”©
+	if (Trigger) //nullptr ë°©ì–´
 	{
-		Trigger->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerBeginOverlap); // ¼öÁ¤/Ãß°¡
-		Trigger->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnTriggerEndOverlap);     // ¼öÁ¤/Ãß°¡
+		Trigger->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerBeginOverlap); // ìˆ˜ì •/ì¶”ê°€
+		Trigger->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnTriggerEndOverlap);     // ìˆ˜ì •/ì¶”ê°€
 	}
 }
 
-void APuzzleColorButton::BeginPlay() 
+void APuzzleColorButton::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Æ®¸®°Å ÀÌº¥Æ® ¹ÙÀÎµù
-	// ¼­¹ö¿¡¼­¸¸ ´­¸² ÆÇÁ¤
+	// íŠ¸ë¦¬ê±° ì´ë²¤íŠ¸ ë°”ì¸ë”©
+	// ì„œë²„ì—ì„œë§Œ ëˆŒë¦¼ íŒì •
 
-	// ½ÇÇà Áß¿¡µµ BP¿¡¼­ TriggerShape¸¦ ¹Ù²åÀ» ¼ö ÀÖÀ¸¹Ç·Î ´Ù½Ã ¼±ÅÃ
-	ResolveTriggerComponent(); // ¼öÁ¤/Ãß°¡: BeginPlay¿¡¼­ Àç¼±ÅÃ
+	// ì‹¤í–‰ ì¤‘ì—ë„ BPì—ì„œ TriggerShapeë¥¼ ë°”ê¿¨ì„ ìˆ˜ ìˆìœ¼ë¯€ë¡œ ë‹¤ì‹œ ì„ íƒ
+	ResolveTriggerComponent(); // ìˆ˜ì •/ì¶”ê°€: BeginPlayì—ì„œ ì¬ì„ íƒ
 
-	// Æ®¸®°Å°¡ ¾øÀ¸¸é ¹öÆ°ÀÌ µ¿ÀÛÇÒ ¼ö ¾øÀ¸´Ï ·Î±×·Î ¾Ë·ÁÁÖ°í Á¾·á
-	if (!Trigger) // ¼öÁ¤/Ãß°¡: TriggerBox/Capsule µÑ ´Ù ¾øÀ» ¶§
+	// íŠ¸ë¦¬ê±°ê°€ ì—†ìœ¼ë©´ ë²„íŠ¼ì´ ë™ì‘í•  ìˆ˜ ì—†ìœ¼ë‹ˆ ë¡œê·¸ë¡œ ì•Œë ¤ì£¼ê³  ì¢…ë£Œ
+	if (!Trigger) // ìˆ˜ì •/ì¶”ê°€: TriggerBox/Capsule ë‘˜ ë‹¤ ì—†ì„ ë•Œ
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PuzzleColorButton: Trigger(Box/Capsule) component not found."));
 		return;
 	}
 
-	// ¿À¹ö·¦ ÀÌº¥Æ® ¹ÙÀÎµùÀÌ Áßº¹µÉ ¼ö ÀÖÀ¸¹Ç·Î Á¦°Å ÈÄ ´Ù½Ã ¹ÙÀÎµù
-	Trigger->OnComponentBeginOverlap.RemoveDynamic(this, &ThisClass::OnTriggerBeginOverlap); 
-	Trigger->OnComponentEndOverlap.RemoveDynamic(this, &ThisClass::OnTriggerEndOverlap);     
-	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerBeginOverlap);    
-	Trigger->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnTriggerEndOverlap);        
+	// ì˜¤ë²„ë© ì´ë²¤íŠ¸ ë°”ì¸ë”©ì´ ì¤‘ë³µë  ìˆ˜ ìˆìœ¼ë¯€ë¡œ ì œê±° í›„ ë‹¤ì‹œ ë°”ì¸ë”©
+	Trigger->OnComponentBeginOverlap.RemoveDynamic(this, &ThisClass::OnTriggerBeginOverlap);
+	Trigger->OnComponentEndOverlap.RemoveDynamic(this, &ThisClass::OnTriggerEndOverlap);
+	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerBeginOverlap);
+	Trigger->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnTriggerEndOverlap);
 }
 
-void APuzzleColorButton::ResolveTriggerComponent() 
+void APuzzleColorButton::ResolveTriggerComponent()
 {
-	// ±âº»Àº µÑ ´Ù ºñÈ°¼ºÀ¸·Î ½ÃÀÛ
-	Trigger = nullptr; 
+	// ê¸°ë³¸ì€ ë‘˜ ë‹¤ ë¹„í™œì„±ìœ¼ë¡œ ì‹œì‘
+	Trigger = nullptr;
 
 	if (TriggerBox)
 	{
-		TriggerBox->SetCollisionEnabled(ECollisionEnabled::NoCollision); 
+		TriggerBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 	if (TriggerCapsule)
 	{
-		TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision); 
+		TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
-	// ¼±ÅÃµÈ ¸ğ¾ç¿¡ µû¶ó È°¼º Æ®¸®°Å °áÁ¤
+	// ì„ íƒëœ ëª¨ì–‘ì— ë”°ë¼ í™œì„± íŠ¸ë¦¬ê±° ê²°ì •
 	if (TriggerShape == EPuzzleTriggerShape::Box)
 	{
 		if (TriggerBox)
 		{
-			Trigger = TriggerBox; 
-			TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly); 
+			Trigger = TriggerBox;
+			TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
 	}
 	else
 	{
 		if (TriggerCapsule)
 		{
-			Trigger = TriggerCapsule; 
-			TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly); 
+			Trigger = TriggerCapsule;
+			TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
 	}
 
-	// µÑ ´Ù ¾ø°Å³ª ¼±ÅÃµÈ °ÍÀÌ ¾øÀ¸¸é, ÀÖ´Â ÂÊÀ» Æú¹éÀ¸·Î »ç¿ë
-	if (!Trigger) 
+	// ë‘˜ ë‹¤ ì—†ê±°ë‚˜ ì„ íƒëœ ê²ƒì´ ì—†ìœ¼ë©´, ìˆëŠ” ìª½ì„ í´ë°±ìœ¼ë¡œ ì‚¬ìš©
+	if (!Trigger)
 	{
 		if (TriggerBox)
 		{
-			Trigger = TriggerBox; 
-			TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly); 
+			Trigger = TriggerBox;
+			TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
 		else if (TriggerCapsule)
 		{
-			Trigger = TriggerCapsule; 
-			TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly); 
+			Trigger = TriggerCapsule;
+			TriggerCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
 	}
 }
 
-void APuzzleColorButton::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
+void APuzzleColorButton::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	// bPressed °ªÀ» ³×Æ®¿öÅ©·Î º¹Á¦
-	DOREPLIFETIME(APuzzleColorButton, bPressed); 
+	// bPressed ê°’ì„ ë„¤íŠ¸ì›Œí¬ë¡œ ë³µì œ
+	DOREPLIFETIME(APuzzleColorButton, bPressed);
 }
 
-void APuzzleColorButton::OnRep_Pressed() 
+void APuzzleColorButton::OnRep_Pressed()
 {
-	// Å¬¶óÀÌ¾ğÆ®¿¡¼­ ´­¸² »óÅÂ°¡ ¹Ù²î¸é È£Ãâ
-	// ·ÎÁ÷ ÆÇ´ÜÀº ¼­¹ö¿¡¼­ °ÔÀÓ¸ğµå°¡
+	// í´ë¼ì´ì–¸íŠ¸ì—ì„œ ëˆŒë¦¼ ìƒíƒœê°€ ë°”ë€Œë©´ í˜¸ì¶œ
+	// ë¡œì§ íŒë‹¨ì€ ì„œë²„ì—ì„œ ê²Œì„ëª¨ë“œê°€
 	BP_OnPressedVisualChanged(bPressed);
 }
 
-bool APuzzleColorButton::IsValidActivator(AActor* OtherActor) const // ¼öÁ¤/Ãß°¡: Å¬·¡½º¸í ÀÏÄ¡
+bool APuzzleColorButton::IsValidActivator(AActor* OtherActor) const // ìˆ˜ì •/ì¶”ê°€: í´ë˜ìŠ¤ëª… ì¼ì¹˜
 {
-	// À¯È¿È®ÀÎ
+	// ìœ íš¨í™•ì¸
 	if (!IsValid(OtherActor) || OtherActor == this)
 	{
 		return false;
 	}
 
-	// ÅÂ±× ÇÊÅÍ°¡ ¾øÀ¸¸é ÅÂ±× °Ë»çx
+	// íƒœê·¸ í•„í„°ê°€ ì—†ìœ¼ë©´ íƒœê·¸ ê²€ì‚¬x
 	if (RequiredActorTag != NAME_None && !OtherActor->ActorHasTag(RequiredActorTag))
 	{
 		return false;
 	}
 
-	// ¹®Á¦¾øÀ¸¸é ´­¸² ÀÎÁ¤
+	// ë¬¸ì œì—†ìœ¼ë©´ ëˆŒë¦¼ ì¸ì •
 	return true;
 }
 
-void APuzzleColorButton::OnTriggerBeginOverlap( 
+void APuzzleColorButton::OnTriggerBeginOverlap(
 	UPrimitiveComponent*, AActor* OtherActor,
 	UPrimitiveComponent*, int32, bool, const FHitResult&)
 {
-	// ´­¸² ÆÇÁ¤Àº ¼­¹ö¿¡¼­
+	// ëˆŒë¦¼ íŒì •ì€ ì„œë²„ì—ì„œ
 	if (!HasAuthority())
 	{
 		return;
 	}
 
-	// ´­¸² ÀÎÁ¤ ´ë»óÀÌ ¾Æ´Ï¸é ¹«½Ã
+	// ëˆŒë¦¼ ì¸ì • ëŒ€ìƒì´ ì•„ë‹ˆë©´ ë¬´ì‹œ
 	if (!IsValidActivator(OtherActor))
 	{
 		return;
 	}
 
-	// Æ®¸®°Å ¾È¿¡ µé¾î¿Â À¯È¿ ´ë»ó ¼ö¸¦ ¿Ã¸²
+	// íŠ¸ë¦¬ê±° ì•ˆì— ë“¤ì–´ì˜¨ ìœ íš¨ ëŒ€ìƒ ìˆ˜ë¥¼ ì˜¬ë¦¼
 	OverlapCount++;
 
-	// Ã¹ ¹øÂ°·Î µé¾î¿Â ¼ø°£¿¡¸¸ ´­¸²
+	// ì²« ë²ˆì§¸ë¡œ ë“¤ì–´ì˜¨ ìˆœê°„ì—ë§Œ ëˆŒë¦¼
 	if (OverlapCount == 1)
 	{
 		ServerSetPressed(true);
 	}
 }
 
-void APuzzleColorButton::OnTriggerEndOverlap( 
+void APuzzleColorButton::OnTriggerEndOverlap(
 	UPrimitiveComponent*, AActor* OtherActor,
 	UPrimitiveComponent*, int32)
 {
-	// ´­¸² ÆÇÁ¤Àº ¼­¹ö°¡
+	// ëˆŒë¦¼ íŒì •ì€ ì„œë²„ê°€
 	if (!HasAuthority())
 	{
 		return;
 	}
 
-	// ´­¸² ÀÎÁ¤ ´ë»óÀÌ ¾Æ´Ï¸é ¹«½Ã
+	// ëˆŒë¦¼ ì¸ì • ëŒ€ìƒì´ ì•„ë‹ˆë©´ ë¬´ì‹œ
 	if (!IsValidActivator(OtherActor))
 	{
 		return;
 	}
 
-	// Æ®¸®°Å¿¡¼­ ³ª°£ À¯È¿ ´ë»ó ¼ö¸¦ ³»¸²
+	// íŠ¸ë¦¬ê±°ì—ì„œ ë‚˜ê°„ ìœ íš¨ ëŒ€ìƒ ìˆ˜ë¥¼ ë‚´ë¦¼
 	OverlapCount = FMath::Max(0, OverlapCount - 1);
 
-	// ¸ğµÎ¾øÀ¸¸é ÇØÁ¦
+	// ëª¨ë‘ì—†ìœ¼ë©´ í•´ì œ
 	if (OverlapCount == 0)
 	{
 		ServerSetPressed(false);
 	}
 }
 
-void APuzzleColorButton::ServerSetPressed(bool bNewPressed)		
+void APuzzleColorButton::ServerSetPressed(bool bNewPressed)
 {
-	// ¼­¹ö¸¸ »óÅÂ º¯°æ °¡´É
+	// ì„œë²„ë§Œ ìƒíƒœ ë³€ê²½ ê°€ëŠ¥
 	if (!HasAuthority())
 	{
 		return;
 	}
 
-	// »óÅÂ°¡ °°À¸¸é À¯Áö
+	// ìƒíƒœê°€ ê°™ìœ¼ë©´ ìœ ì§€
 	if (bPressed == bNewPressed)
 	{
 		return;
 	}
 
-	// ´­¸² »óÅÂ¸¦ º¯°æ
+	// ëˆŒë¦¼ ìƒíƒœë¥¼ ë³€ê²½
 	bPressed = bNewPressed;
 
-	// ¼­¹ö¿¡¼­µµ ¿¬Ãâ½Ã È£Ãâ
+	// ì„œë²„ì—ì„œë„ ì—°ì¶œì‹œ í˜¸ì¶œ
 	BP_OnPressedVisualChanged(bPressed);
 
-	// °ÔÀÓ¸ğµå´Â ÀÌ ÀÌº¥Æ®¸¦ ¹Ş¾Æ Á¶°ÇÀ» °è»ê
+	// ê²Œì„ëª¨ë“œëŠ” ì´ ì´ë²¤íŠ¸ë¥¼ ë°›ì•„ ì¡°ê±´ì„ ê³„ì‚°
 	OnPressedChanged.Broadcast(this, bPressed);
 }
