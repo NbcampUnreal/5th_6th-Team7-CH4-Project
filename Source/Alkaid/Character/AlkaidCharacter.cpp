@@ -252,24 +252,6 @@ void AAlkaidCharacter::HandleLookInput(const FInputActionValue& InValue)
 	AddControllerPitchInput(InLookVector.Y);
 }
 
-void AAlkaidCharacter::HandleUsingItemInput(const FInputActionValue& InValue)
-{
-	UE_LOG(LogTemp, Warning, TEXT("[Input] HandleUsingItemInput fired"));
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Green, TEXT("[Input] Fired"));
-
-	if (EquipmentComponent)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Input] EquipmentComponent OK, CurrentInteractItem=%s"),
-			CurrentInteractItem ? *CurrentInteractItem->GetName() : TEXT("NULL"));
-
-		EquipmentComponent->RequestInteractToggle(CurrentInteractItem);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Input] EquipmentComponent is NULL"));
-	}
-}
-
 void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
 {
 	
@@ -365,7 +347,21 @@ void AAlkaidCharacter::StopSprint(const FInputActionValue& Invalue)
 	//AK_LOG_SPEED("INPUT StopSprint RPC sent");
 }
 
-// Called every frame
+void AAlkaidCharacter::UsingItemInputStarted(const FInputActionValue& Invalue)
+{
+	if (EquipmentComponent) EquipmentComponent->UsingItemInputStarted();
+}
+
+void AAlkaidCharacter::UsingItemInputCompleted(const FInputActionValue& Invalue)
+{
+	if (EquipmentComponent) EquipmentComponent->UsingItemInputCompleted();
+}
+
+void AAlkaidCharacter::UsingItemInputCanceled(const FInputActionValue& Invalue)
+{
+	if (EquipmentComponent) EquipmentComponent->UsingItemInputCanceled();
+}
+
 void AAlkaidCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -394,8 +390,6 @@ void AAlkaidCharacter::Tick(float DeltaTime)
 			}
 		}
 	}
-
-
 }
 
 // Called to bind functionality to input
@@ -412,7 +406,9 @@ void AAlkaidCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EIC->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 	EIC->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-	EIC->BindAction(UsingItem, ETriggerEvent::Started, this, &ThisClass::HandleUsingItemInput);
+	EIC->BindAction(UsingItem, ETriggerEvent::Started, this, &ThisClass::UsingItemInputStarted);
+	EIC->BindAction(UsingItem, ETriggerEvent::Completed, this, &ThisClass::UsingItemInputCompleted);
+	EIC->BindAction(UsingItem, ETriggerEvent::Canceled, this, &ThisClass::UsingItemInputCanceled);
 
 	EIC->BindAction(UsingCandle, ETriggerEvent::Started, this, &ThisClass::HandleUsingCandleInput);
 
@@ -426,5 +422,7 @@ void AAlkaidCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	EIC->BindAction(SprintAction, ETriggerEvent::Started, this, &ThisClass::StartSprint);
 	EIC->BindAction(SprintAction, ETriggerEvent::Completed, this, &ThisClass::StopSprint);
+
+	
 }
 

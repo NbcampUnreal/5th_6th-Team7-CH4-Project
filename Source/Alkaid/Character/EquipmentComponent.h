@@ -71,7 +71,21 @@ public:
 	FORCEINLINE EEquipmentType GetEquipmentType() const { return EquipmentType; }
 	FORCEINLINE AActor* GetHeldItemRight() const { return HeldItemRight; }
 
-	
+	UPROPERTY(EditDefaultsOnly, Category = "Input|ItemDrop")
+	float DropHoldSeconds = 1.5f;
+
+	float UsingItemPressedTime = 0.f;
+
+	bool bUsingItemPressed = false;
+
+	UFUNCTION()
+	void UsingItemInputStarted();
+
+	UFUNCTION()
+	void UsingItemInputCompleted();
+
+	UFUNCTION()
+	void UsingItemInputCanceled();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

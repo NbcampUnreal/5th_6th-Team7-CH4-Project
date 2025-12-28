@@ -82,13 +82,13 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerSetSprinting(bool NewSprinting);
 
+
+
 	//Input
 private:
 	void HandleMoveInput(const FInputActionValue& InValue);
 
 	void HandleLookInput(const FInputActionValue& InValue);
-
-	void HandleUsingItemInput(const FInputActionValue& InValue);
 	
 	void HandleUsingCandleInput(const FInputActionValue& InValue);
 
@@ -103,6 +103,12 @@ private:
 	void StartSprint(const FInputActionValue& Invalue);
 
 	void StopSprint(const FInputActionValue& Invalue);
+
+	void UsingItemInputStarted(const FInputActionValue& Invalue);
+
+	void UsingItemInputCompleted(const FInputActionValue& Invalue);
+
+	void UsingItemInputCanceled(const FInputActionValue& Invalue);
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;

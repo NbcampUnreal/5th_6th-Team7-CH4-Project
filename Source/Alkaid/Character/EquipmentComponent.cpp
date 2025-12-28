@@ -94,42 +94,57 @@ void UEquipmentComponent::ServerTryInteract_Implementation()
 	if(!OwnerAC)
 		return;
 
-	if (HeldItemRight || HeldItemLeft)
-	{
-		ServerDropItem();
-		return;
-	}
-	FVector Start = OwnerAC->GetPawnViewLocation();
-	FVector End = Start + (OwnerAC->GetControlRotation().Vector() * 200.0f);
+	FVector Start = OwnerAC->GetPawnViewLocation() + OwnerAC->GetControlRotation().Vector() * 30.0f;
+	FVector End = Start + (OwnerAC->GetControlRotation().Vector() * 300.0f);
 
 	FHitResult Hit;
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(InteractTrace), false, OwnerAC);
 
-	bool  bHit = GetWorld()->LineTraceSingleByChannel(
+	const float TraceRadius = 30.0f;
+
+const bool bHit = GetWorld()->SweepSingleByChannel(
 		Hit,
 		Start,
 		End,
-		ECC_GameTraceChannel1,//시선전용채널
+		FQuat::Identity,
+		ECC_GameTraceChannel1,
+		FCollisionShape::MakeSphere(TraceRadius),
 		Params
-	);
+);
 
 
-	AActor* Candidate = Hit.GetActor();
-	if (!Candidate) return;
+AActor* Candidate = bHit ? Hit.GetActor() : nullptr;
 
+// 1) 맞은게 있고, 줍기 가능한 타입이면 -> 줍기
+if (Candidate)
+{
 	const EEquipmentType NewType = DetermineEquipmentType(Candidate);
-	if(NewType == EEquipmentType::None)
-		return;
+	if (NewType != EEquipmentType::None)
+	{
+		// 퍼즐이면 빈 손에 넣기(양손 운반)
+		if (NewType == EEquipmentType::Puzzle)
+		{
+			if (!HeldItemRight) { ServerEquipRightItem(Candidate, NewType); return; }
+			if (!HeldItemLeft) { ServerEquipLeftItem(Candidate, NewType);  return; }
+			// 두 손 다 차 있으면 아무 것도 안 함
+			return;
+		}
 
-	DrawDebugLine(GetWorld(),
-		Start,
-		End,
-		FColor::Red,
-		false,
-		4.0f,
-		0,
-		3.0f);
-	ServerEquipRightItem(Candidate, NewType);
+		// 그 외는 한손(오른손) 정책
+		if (HeldItemRight || HeldItemLeft) ServerDropItem();
+		ServerEquipRightItem(Candidate, NewType);
+		return;
+	}
+}
+
+DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.0f, 0, 1.0f);
+DrawDebugSphere(GetWorld(), Start, TraceRadius, 12, FColor::Red, false, 3.0f);
+DrawDebugSphere(GetWorld(), End, TraceRadius, 12, FColor::Red, false, 3.0f);
+
+if (bHit)
+{
+	DrawDebugSphere(GetWorld(), Hit.Location, TraceRadius, 12, FColor::Green, false, 3.0f);
+}
 }
 
 void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
@@ -178,15 +193,21 @@ void UEquipmentComponent::RequestInteractToggle(AActor*)
 
 void UEquipmentComponent::ServerDropItem_Implementation()
 {
-	if (!HeldItemRight && !HeldItemLeft)
+	if(HeldItemRight)
+	{
+		ItemDrop(HeldItemRight);
+		if (!HeldItemRight) EquipmentType = EEquipmentType::None;
+		ApplyAttach();
 		return;
+	}
 
-	ItemDrop(HeldItemRight);
-	ItemDrop(HeldItemLeft);
-
-	EquipmentType = EEquipmentType::None;
-
-	ApplyAttach();
+	if (HeldItemLeft)
+	{
+		ItemDrop(HeldItemLeft);
+		if (!HeldItemLeft) EquipmentType = EEquipmentType::None;
+		ApplyAttach();
+		return;
+	}
 }
 
 void UEquipmentComponent::ServerToggleInteract_Implementation(AActor* CandidateItem)
@@ -211,6 +232,38 @@ void UEquipmentComponent::ServerToggleInteract_Implementation(AActor* CandidateI
 		return;
 
 	ServerEquipRightItem(CandidateItem, NewType);
+}
+
+void UEquipmentComponent::UsingItemInputStarted()
+{
+	if (!GetOwner())
+		return;
+
+	bUsingItemPressed = true;
+	UsingItemPressedTime = GetWorld()->GetTimeSeconds();
+}
+
+void UEquipmentComponent::UsingItemInputCompleted()
+{
+	if (!bUsingItemPressed)
+		return;
+
+	bUsingItemPressed = false;
+
+	const float HeldFor = GetWorld()->GetTimeSeconds() - UsingItemPressedTime;
+
+	if (HeldFor >= DropHoldSeconds)
+	{
+		ServerDropItem();
+		return;
+	}
+
+	RequestInteractToggle(nullptr);
+}
+
+void UEquipmentComponent::UsingItemInputCanceled()
+{
+	bUsingItemPressed = false;
 }
 
 // Called when the game starts
