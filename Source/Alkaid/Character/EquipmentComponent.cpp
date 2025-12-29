@@ -94,6 +94,10 @@ void UEquipmentComponent::ServerTryInteract_Implementation()
 	if(!OwnerAC)
 		return;
 
+	UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] Called. Owner=%s Role=%d HasAuth=%d"),
+		*GetNameSafe(GetOwner()), (int32)GetOwner()->GetLocalRole(), GetOwner()->HasAuthority());
+
+
 	FVector Start = OwnerAC->GetPawnViewLocation() + OwnerAC->GetControlRotation().Vector() * 30.0f;
 	FVector End = Start + (OwnerAC->GetControlRotation().Vector() * 300.0f);
 
@@ -111,7 +115,13 @@ const bool bHit = GetWorld()->SweepSingleByChannel(
 		FCollisionShape::MakeSphere(TraceRadius),
 		Params
 );
+UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] Start=%s End=%s"),
+	*Start.ToString(), *End.ToString());
 
+UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] bHit=%d HitActor=%s HitComp=%s"),
+	bHit,
+	*GetNameSafe(Hit.GetActor()),
+	*GetNameSafe(Hit.GetComponent()));
 
 AActor* Candidate = bHit ? Hit.GetActor() : nullptr;
 
@@ -129,7 +139,17 @@ if (Candidate)
 			// 두 손 다 차 있으면 아무 것도 안 함
 			return;
 		}
+		if (NewType == EEquipmentType::Block)
+		{
+			if (!OwnerAC)
+				return;
 
+			if (HeldItemRight || HeldItemLeft)
+				return;
+
+			OwnerAC->ServerStartPushing(Candidate);
+			return;
+		}
 		// 그 외는 한손(오른손) 정책
 		if (HeldItemRight || HeldItemLeft) ServerDropItem();
 		ServerEquipRightItem(Candidate, NewType);
@@ -252,9 +272,25 @@ void UEquipmentComponent::UsingItemInputCompleted()
 
 	const float HeldFor = GetWorld()->GetTimeSeconds() - UsingItemPressedTime;
 
+	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
+
+	if (!OwnerAC)
+		return;
+
 	if (HeldFor >= DropHoldSeconds)
 	{
+		if (OwnerAC->bIsPushing())
+		{
+			OwnerAC->ServerStopPushing();
+			return;
+		}
 		ServerDropItem();
+		return;
+	}
+
+	if(OwnerAC->bIsPushing())
+	{
+		OwnerAC->ServerStopPushing();
 		return;
 	}
 

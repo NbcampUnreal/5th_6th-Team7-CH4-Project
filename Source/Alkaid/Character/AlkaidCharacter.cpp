@@ -201,7 +201,9 @@ void AAlkaidCharacter::SprintSpeed_Server()
 void AAlkaidCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
 	DOREPLIFETIME(AAlkaidCharacter, bIsSprinting);
+	DOREPLIFETIME(AAlkaidCharacter, Pushing);
 }
 
 void AAlkaidCharacter::ServerSetSprinting_Implementation(bool NewSprinting)
@@ -237,6 +239,12 @@ void AAlkaidCharacter::HandleMoveInput(const FInputActionValue& InValue)
 
 	AddMovementInput(ForwardDirection, InMovementVector.X);
 	AddMovementInput(RightDirection, InMovementVector.Y);
+
+	if (bIsPushing())
+	{
+		AddMovementInput(ForwardDirection, InMovementVector.X);
+		return;
+	}
 }
 
 void AAlkaidCharacter::HandleLookInput(const FInputActionValue& InValue)
@@ -362,6 +370,45 @@ void AAlkaidCharacter::UsingItemInputCanceled(const FInputActionValue& Invalue)
 	if (EquipmentComponent) EquipmentComponent->UsingItemInputCanceled();
 }
 
+void AAlkaidCharacter::OnRep_Pushing()
+{
+	if(StatComponent)
+	{
+		StatComponent->ApplySpeed();
+	}
+}
+
+void AAlkaidCharacter::ServerStopPushing_Implementation()
+{
+	if (!Pushing)
+		return;
+
+	Pushing = nullptr;
+
+	if(StatComponent)
+	{
+		StatComponent->ApplySpeed();
+	}
+}
+
+void AAlkaidCharacter::ServerStartPushing_Implementation(AActor* NewBlock)
+{
+	if(!NewBlock)
+		return;
+
+	if(!StatComponent)
+		return;
+
+	if(Pushing)
+		return;
+
+	if(StatComponent->GetStamina() <= 0.0f)
+		return;
+
+	Pushing = NewBlock;
+	StatComponent->ApplySpeed();
+}
+
 void AAlkaidCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -388,6 +435,35 @@ void AAlkaidCharacter::Tick(float DeltaTime)
 			{
 				ServerSetSprinting(false);
 			}
+		}
+	}
+
+	if (EquipmentComponent)
+	{
+		const bool bCarryingPuzzle = 
+			(EquipmentComponent->GetEquipmentType() == EEquipmentType::Puzzle) &&
+			(EquipmentComponent->GetHeldItemRight() != nullptr || EquipmentComponent->GetHeldItemLeft() != nullptr);
+
+		if (bCarryingPuzzle)
+		{
+			StatComponent->AddStamina(-4 * DeltaTime);
+
+			if (StatComponent->GetStamina() <= 0.0f)
+			{
+				EquipmentComponent->ServerDropItem();
+				return;
+			}
+		}
+	}
+
+	if(Pushing)
+	{
+		StatComponent->AddStamina(-4 * DeltaTime);
+
+		if (StatComponent->GetStamina() <= 0.0f)
+		{
+			ServerStopPushing();
+			return;
 		}
 	}
 }

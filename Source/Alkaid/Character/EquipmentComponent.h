@@ -70,6 +70,7 @@ public:
 
 	FORCEINLINE EEquipmentType GetEquipmentType() const { return EquipmentType; }
 	FORCEINLINE AActor* GetHeldItemRight() const { return HeldItemRight; }
+	FORCEINLINE AActor* GetHeldItemLeft() const { return HeldItemLeft; }
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input|ItemDrop")
 	float DropHoldSeconds = 1.5f;

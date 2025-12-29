@@ -82,7 +82,23 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerSetSprinting(bool NewSprinting);
 
+	// Pushing
 
+	UPROPERTY(ReplicatedUsing = OnRep_Pushing)
+	TObjectPtr<AActor> Pushing = nullptr;
+
+	UFUNCTION()
+	void OnRep_Pushing();
+
+	UFUNCTION(Server, Reliable)
+	void ServerStartPushing(AActor* NewBlock);
+
+	UFUNCTION(Server, Reliable)
+	void ServerStopPushing();
+
+	FORCEINLINE bool bIsPushing() const { return Pushing != nullptr; }
+
+	FORCEINLINE AActor* GetPushing() const { return Pushing; }
 
 	//Input
 private:
@@ -157,10 +173,8 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<AActor> CurrentInteractItem = nullptr;
+
 private:
-	
-	UPROPERTY()
-	TObjectPtr<AActor> Pushing;
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> EscWidgetInstance;
