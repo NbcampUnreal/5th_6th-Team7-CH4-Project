@@ -3,6 +3,7 @@
 #include "Character/EquipmentComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Components/PrimitiveComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Alkaid/Character/AlkaidCharacter.h"
 
 // Sets default values for this component's properties
@@ -87,6 +88,85 @@ void UEquipmentComponent::ServerUnequipAllItems_Implementation()
 	ApplyAttach();
 }
 
+void UEquipmentComponent::ServerTryInteract_Implementation()
+{
+	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
+	if(!OwnerAC)
+		return;
+
+	UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] Called. Owner=%s Role=%d HasAuth=%d"),
+		*GetNameSafe(GetOwner()), (int32)GetOwner()->GetLocalRole(), GetOwner()->HasAuthority());
+
+
+	FVector Start = OwnerAC->GetPawnViewLocation() + OwnerAC->GetControlRotation().Vector() * 30.0f;
+	FVector End = Start + (OwnerAC->GetControlRotation().Vector() * 300.0f);
+
+	FHitResult Hit;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(InteractTrace), false, OwnerAC);
+
+	const float TraceRadius = 30.0f;
+
+const bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_GameTraceChannel1,
+		FCollisionShape::MakeSphere(TraceRadius),
+		Params
+);
+UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] Start=%s End=%s"),
+	*Start.ToString(), *End.ToString());
+
+UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] bHit=%d HitActor=%s HitComp=%s"),
+	bHit,
+	*GetNameSafe(Hit.GetActor()),
+	*GetNameSafe(Hit.GetComponent()));
+
+AActor* Candidate = bHit ? Hit.GetActor() : nullptr;
+
+// 1) 맞은게 있고, 줍기 가능한 타입이면 -> 줍기
+if (Candidate)
+{
+	const EEquipmentType NewType = DetermineEquipmentType(Candidate);
+	if (NewType != EEquipmentType::None)
+	{
+		// 퍼즐이면 빈 손에 넣기(양손 운반)
+		if (NewType == EEquipmentType::Puzzle)
+		{
+			if (!HeldItemRight) { ServerEquipRightItem(Candidate, NewType); return; }
+			if (!HeldItemLeft) { ServerEquipLeftItem(Candidate, NewType);  return; }
+			// 두 손 다 차 있으면 아무 것도 안 함
+			return;
+		}
+		if (NewType == EEquipmentType::Block)
+		{
+			if (!OwnerAC)
+				return;
+
+			if (HeldItemRight || HeldItemLeft)
+				return;
+
+			OwnerAC->ServerStartPushing(Candidate);
+			return;
+		}
+		// 그 외는 한손(오른손) 정책
+		if (HeldItemRight || HeldItemLeft) ServerDropItem();
+		ServerEquipRightItem(Candidate, NewType);
+		return;
+	}
+}
+
+DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.0f, 0, 1.0f);
+DrawDebugSphere(GetWorld(), Start, TraceRadius, 12, FColor::Red, false, 3.0f);
+DrawDebugSphere(GetWorld(), End, TraceRadius, 12, FColor::Red, false, 3.0f);
+
+if (bHit)
+{
+	DrawDebugSphere(GetWorld(), Hit.Location, TraceRadius, 12, FColor::Green, false, 3.0f);
+}
+}
+
 void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 {
 	if(!ItemSlot)
@@ -114,30 +194,40 @@ void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 	ItemSlot = nullptr;
 }
 
-void UEquipmentComponent::RequestInteractToggle(AActor* CandidateItem)
+void UEquipmentComponent::RequestInteractToggle(AActor*)
 {
+
 	if (!GetOwner())
 		return;
 
 	if (!GetOwner()->HasAuthority())
 	{
-		ServerToggleInteract(CandidateItem);
+		
+		ServerTryInteract();
 		return;
 	}
-	ServerToggleInteract(CandidateItem);
+
+	
+	ServerTryInteract();
 }
 
 void UEquipmentComponent::ServerDropItem_Implementation()
 {
-	if (!HeldItemRight && !HeldItemLeft)
+	if(HeldItemRight)
+	{
+		ItemDrop(HeldItemRight);
+		if (!HeldItemRight) EquipmentType = EEquipmentType::None;
+		ApplyAttach();
 		return;
+	}
 
-	ItemDrop(HeldItemRight);
-	ItemDrop(HeldItemLeft);
-
-	EquipmentType = EEquipmentType::None;
-
-	ApplyAttach();
+	if (HeldItemLeft)
+	{
+		ItemDrop(HeldItemLeft);
+		if (!HeldItemLeft) EquipmentType = EEquipmentType::None;
+		ApplyAttach();
+		return;
+	}
 }
 
 void UEquipmentComponent::ServerToggleInteract_Implementation(AActor* CandidateItem)
@@ -162,6 +252,54 @@ void UEquipmentComponent::ServerToggleInteract_Implementation(AActor* CandidateI
 		return;
 
 	ServerEquipRightItem(CandidateItem, NewType);
+}
+
+void UEquipmentComponent::UsingItemInputStarted()
+{
+	if (!GetOwner())
+		return;
+
+	bUsingItemPressed = true;
+	UsingItemPressedTime = GetWorld()->GetTimeSeconds();
+}
+
+void UEquipmentComponent::UsingItemInputCompleted()
+{
+	if (!bUsingItemPressed)
+		return;
+
+	bUsingItemPressed = false;
+
+	const float HeldFor = GetWorld()->GetTimeSeconds() - UsingItemPressedTime;
+
+	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
+
+	if (!OwnerAC)
+		return;
+
+	if (HeldFor >= DropHoldSeconds)
+	{
+		if (OwnerAC->bIsPushing())
+		{
+			OwnerAC->ServerStopPushing();
+			return;
+		}
+		ServerDropItem();
+		return;
+	}
+
+	if(OwnerAC->bIsPushing())
+	{
+		OwnerAC->ServerStopPushing();
+		return;
+	}
+
+	RequestInteractToggle(nullptr);
+}
+
+void UEquipmentComponent::UsingItemInputCanceled()
+{
+	bUsingItemPressed = false;
 }
 
 // Called when the game starts
@@ -244,13 +382,25 @@ EEquipmentType UEquipmentComponent::DetermineEquipmentType(AActor* Item) const
 {
 	if (!Item) return EEquipmentType::None;
 
+	UE_LOG(LogTemp, Warning, TEXT("[Equip] DetermineEquipmentType Item=%s Class=%s"),
+		*Item->GetName(), *Item->GetClass()->GetName());
+
+
 	for(const auto& Pair : ItemClassToEquipmentType)
 	{
+		if (Pair.Key)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("  - Check Key=%s  IsA=%d"),
+				*Pair.Key->GetName(), Item->IsA(Pair.Key));
+		}
+
 		if (Pair.Key &&Item->IsA(Pair.Key))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("  => MATCH Type=%d"), (int32)Pair.Value);
 			return Pair.Value;
 		}
 	}
+	UE_LOG(LogTemp, Warning, TEXT("  => NO MATCH"));
 	return EEquipmentType::None;
 }
 

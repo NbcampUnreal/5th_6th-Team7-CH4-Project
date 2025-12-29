@@ -201,7 +201,9 @@ void AAlkaidCharacter::SprintSpeed_Server()
 void AAlkaidCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
 	DOREPLIFETIME(AAlkaidCharacter, bIsSprinting);
+	DOREPLIFETIME(AAlkaidCharacter, Pushing);
 }
 
 void AAlkaidCharacter::ServerSetSprinting_Implementation(bool NewSprinting)
@@ -237,6 +239,12 @@ void AAlkaidCharacter::HandleMoveInput(const FInputActionValue& InValue)
 
 	AddMovementInput(ForwardDirection, InMovementVector.X);
 	AddMovementInput(RightDirection, InMovementVector.Y);
+
+	if (bIsPushing())
+	{
+		AddMovementInput(ForwardDirection, InMovementVector.X);
+		return;
+	}
 }
 
 void AAlkaidCharacter::HandleLookInput(const FInputActionValue& InValue)
@@ -250,11 +258,6 @@ void AAlkaidCharacter::HandleLookInput(const FInputActionValue& InValue)
 
 	AddControllerYawInput(InLookVector.X);
 	AddControllerPitchInput(InLookVector.Y);
-}
-
-void AAlkaidCharacter::HandleUsingItemInput(const FInputActionValue& InValue)
-{
-	
 }
 
 void AAlkaidCharacter::HandleUsingCandleInput(const FInputActionValue& InValue)
@@ -352,7 +355,60 @@ void AAlkaidCharacter::StopSprint(const FInputActionValue& Invalue)
 	//AK_LOG_SPEED("INPUT StopSprint RPC sent");
 }
 
-// Called every frame
+void AAlkaidCharacter::UsingItemInputStarted(const FInputActionValue& Invalue)
+{
+	if (EquipmentComponent) EquipmentComponent->UsingItemInputStarted();
+}
+
+void AAlkaidCharacter::UsingItemInputCompleted(const FInputActionValue& Invalue)
+{
+	if (EquipmentComponent) EquipmentComponent->UsingItemInputCompleted();
+}
+
+void AAlkaidCharacter::UsingItemInputCanceled(const FInputActionValue& Invalue)
+{
+	if (EquipmentComponent) EquipmentComponent->UsingItemInputCanceled();
+}
+
+void AAlkaidCharacter::OnRep_Pushing()
+{
+	if(StatComponent)
+	{
+		StatComponent->ApplySpeed();
+	}
+}
+
+void AAlkaidCharacter::ServerStopPushing_Implementation()
+{
+	if (!Pushing)
+		return;
+
+	Pushing = nullptr;
+
+	if(StatComponent)
+	{
+		StatComponent->ApplySpeed();
+	}
+}
+
+void AAlkaidCharacter::ServerStartPushing_Implementation(AActor* NewBlock)
+{
+	if(!NewBlock)
+		return;
+
+	if(!StatComponent)
+		return;
+
+	if(Pushing)
+		return;
+
+	if(StatComponent->GetStamina() <= 0.0f)
+		return;
+
+	Pushing = NewBlock;
+	StatComponent->ApplySpeed();
+}
+
 void AAlkaidCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -382,7 +438,34 @@ void AAlkaidCharacter::Tick(float DeltaTime)
 		}
 	}
 
+	if (EquipmentComponent)
+	{
+		const bool bCarryingPuzzle = 
+			(EquipmentComponent->GetEquipmentType() == EEquipmentType::Puzzle) &&
+			(EquipmentComponent->GetHeldItemRight() != nullptr || EquipmentComponent->GetHeldItemLeft() != nullptr);
 
+		if (bCarryingPuzzle)
+		{
+			StatComponent->AddStamina(-4 * DeltaTime);
+
+			if (StatComponent->GetStamina() <= 0.0f)
+			{
+				EquipmentComponent->ServerDropItem();
+				return;
+			}
+		}
+	}
+
+	if(Pushing)
+	{
+		StatComponent->AddStamina(-4 * DeltaTime);
+
+		if (StatComponent->GetStamina() <= 0.0f)
+		{
+			ServerStopPushing();
+			return;
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -399,7 +482,9 @@ void AAlkaidCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EIC->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 	EIC->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-	EIC->BindAction(UsingItem, ETriggerEvent::Started, this, &ThisClass::HandleUsingItemInput);
+	EIC->BindAction(UsingItem, ETriggerEvent::Started, this, &ThisClass::UsingItemInputStarted);
+	EIC->BindAction(UsingItem, ETriggerEvent::Completed, this, &ThisClass::UsingItemInputCompleted);
+	EIC->BindAction(UsingItem, ETriggerEvent::Canceled, this, &ThisClass::UsingItemInputCanceled);
 
 	EIC->BindAction(UsingCandle, ETriggerEvent::Started, this, &ThisClass::HandleUsingCandleInput);
 
@@ -413,5 +498,7 @@ void AAlkaidCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	EIC->BindAction(SprintAction, ETriggerEvent::Started, this, &ThisClass::StartSprint);
 	EIC->BindAction(SprintAction, ETriggerEvent::Completed, this, &ThisClass::StopSprint);
+
+	
 }
 
