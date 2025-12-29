@@ -4,6 +4,7 @@
 #include "Character/AlkaidCharacter.h"
 #include "Controller/AlkaidPlayerController.h"
 #include "Character/AlkaidCharaterStatComponent.h"
+#include "Character/EquipmentComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -222,30 +223,57 @@ void AAlkaidCharacter::ServerSetSprinting_Implementation(bool NewSprinting)
 	//AK_LOG_SPEED("SERVER ServerSetSprinting AFTER SprintSpeed_Server");
 }
 
-void AAlkaidCharacter::HandleMoveInput(const FInputActionValue& InValue)
+void AAlkaidCharacter::ApplyPushingMovementSetting(bool bEnable)
 {
-	if(IsValid(Controller) == false)
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp) return;
+
+	if (bEnable)
 	{
-		return;
+		MoveComp->bOrientRotationToMovement = false;
+		MoveComp->MaxWalkSpeed = 500.f; // 푸시 속도(원하는 값)
+	}
+	else
+	{
+		MoveComp->bOrientRotationToMovement = true;
+		if (StatComponent) StatComponent->ApplySpeed();
 	}
 
-	const FVector2D InMovementVector = InValue.Get<FVector2D>();
+	// 푸시 중 흔들림 방지: 컨트롤러 yaw로 캐릭터 회전시키지 않음
+	bUseControllerRotationYaw = false;
+}
+
+void AAlkaidCharacter::HandleMoveInput(const FInputActionValue& InValue)
+{
+	if (!IsValid(Controller))
+		return;
+
+	FVector2D Move = InValue.Get<FVector2D>();
 
 	const FRotator ControlRotation = Controller->GetControlRotation();
-	const FRotator ControlYawRotation(0.0f, ControlRotation.Yaw, 0.0f);
+	const FRotator ControlYawRotation(0.f, ControlRotation.Yaw, 0.f);
 
 	const FVector ForwardDirection = FRotationMatrix(ControlYawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(ControlYawRotation).GetUnitAxis(EAxis::Y);
 
-	AddMovementInput(ForwardDirection, InMovementVector.X);
-	AddMovementInput(RightDirection, InMovementVector.Y);
-
 	if (bIsPushing())
 	{
-		AddMovementInput(ForwardDirection, InMovementVector.X);
+		Move.Y = 0.f;                      // 옆 이동 차단
+		Move.X = FMath::Max(0.f, Move.X);  // 뒤 이동 차단
+
+		SetActorRotation(FRotator(0.f, PushingYaw, 0.f)); // 방향 고정
+
+		if (Move.X > KINDA_SMALL_NUMBER)
+		{
+			AddMovementInput(GetActorForwardVector(), Move.X);
+		}
 		return;
 	}
+
+	AddMovementInput(ForwardDirection, Move.X);
+	AddMovementInput(RightDirection, Move.Y);
 }
+
 
 void AAlkaidCharacter::HandleLookInput(const FInputActionValue& InValue)
 {
@@ -372,10 +400,7 @@ void AAlkaidCharacter::UsingItemInputCanceled(const FInputActionValue& Invalue)
 
 void AAlkaidCharacter::OnRep_Pushing()
 {
-	if(StatComponent)
-	{
-		StatComponent->ApplySpeed();
-	}
+	ApplyPushingMovementSetting(Pushing != nullptr);
 }
 
 void AAlkaidCharacter::ServerStopPushing_Implementation()
@@ -383,30 +408,72 @@ void AAlkaidCharacter::ServerStopPushing_Implementation()
 	if (!Pushing)
 		return;
 
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastPushToggleTime < PushToggleCooldown)
+		return;
+	LastPushToggleTime = Now;
+
+	AActor* Block = Pushing;
 	Pushing = nullptr;
 
-	if(StatComponent)
+	Block->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+	if(UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Block->GetRootComponent()))
 	{
-		StatComponent->ApplySpeed();
+		PrimComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		PrimComp->SetEnableGravity(true);
+		PrimComp->SetSimulatePhysics(true);
 	}
+	ApplyPushingMovementSetting(false);
+
+	UE_LOG(LogTemp, Warning, TEXT("[Push] STOP. Block=%s"), *GetNameSafe(Block));
 }
 
 void AAlkaidCharacter::ServerStartPushing_Implementation(AActor* NewBlock)
 {
 	if(!NewBlock)
 		return;
-
-	if(!StatComponent)
+	if(Pushing)
 		return;
 
-	if(Pushing)
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastPushToggleTime < PushToggleCooldown)
+		return;
+	LastPushToggleTime = Now;
+
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if(!MeshComp)
+		return;
+
+	if(!EquipmentComponent)
+		return;
+
+	if(!StatComponent)
 		return;
 
 	if(StatComponent->GetStamina() <= 0.0f)
 		return;
 
 	Pushing = NewBlock;
-	StatComponent->ApplySpeed();
+
+	PushingYaw = NewBlock->GetActorRotation().Yaw;
+
+	if(UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(NewBlock->GetRootComponent()))
+	{
+		PrimComp->SetSimulatePhysics(false);
+		PrimComp->SetEnableGravity(false);
+		PrimComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	const FName SocketName = EquipmentComponent->GetRightHandSocketName();
+
+	NewBlock->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
+
+	ApplyPushingMovementSetting(true);
+
+	UE_LOG(LogTemp, Warning, TEXT("[Push] START. Block=%s Socket=%s"),
+		*GetNameSafe(NewBlock), *SocketName.ToString());
+
 }
 
 void AAlkaidCharacter::Tick(float DeltaTime)
@@ -446,7 +513,7 @@ void AAlkaidCharacter::Tick(float DeltaTime)
 
 		if (bCarryingPuzzle)
 		{
-			StatComponent->AddStamina(-4 * DeltaTime);
+			StatComponent->AddStamina(-2 * DeltaTime);
 
 			if (StatComponent->GetStamina() <= 0.0f)
 			{
@@ -458,7 +525,7 @@ void AAlkaidCharacter::Tick(float DeltaTime)
 
 	if(Pushing)
 	{
-		StatComponent->AddStamina(-4 * DeltaTime);
+		StatComponent->AddStamina(-2 * DeltaTime);
 
 		if (StatComponent->GetStamina() <= 0.0f)
 		{
