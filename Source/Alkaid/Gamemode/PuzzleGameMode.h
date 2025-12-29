@@ -2,16 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Server/AlkaidGameModeBase.h"
 #include "PuzzleGameMode.generated.h"
+
 
 class APuzzleColorButton;
 class APuzzleColorDoor;
 
 class APuzzleSignBase;
 class APuzzleReceiverBox;
+class APuzzleMoveHoleWall;
 
 UCLASS()
-class ALKAID_API APuzzleGameMode : public AGameModeBase
+class ALKAID_API APuzzleGameMode : public AAlkaidGameModeBase
 {
 	GENERATED_BODY()
 
@@ -22,62 +25,62 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	// 레벨에 있는 문을 Id로 빠르게 찾기 위한 맵 
-	// TMap(키-값 저장소)
 	UPROPERTY()
 	TMap<FName, TObjectPtr<APuzzleColorDoor>> DoorById;
 
-	// 레벨에 있는 버튼을 Id로 빠르게 찾기 위한 맵
 	UPROPERTY()
 	TMap<FName, TObjectPtr<APuzzleColorButton>> ButtonById;
 
-	// 이미 연 문은 다시 열지 않기 위한 기록
 	UPROPERTY()
 	TSet<FName> OpenedDoorIds;
 
 private:
-	// 레벨에 배치된 버튼과 문을 수집하고 바인딩
 	void CollectActorsAndBind();
 
-	// 버튼 눌림 이벤트를 받는 함수
 	UFUNCTION()
 	void OnButtonPressedChanged(APuzzleColorButton* Button, bool bPressed);
 
 private:
-	// 버튼 Id에서 퍼즐 키를 뽑는다
-	// 예: 1_1_BlueButton -> 1_1
 	FString GetPuzzleKeyFromId(const FName& InId) const;
-
-	// 버튼 Id에서 문 Id를 만든다
-	// 예: 1_1_BlueButton -> 1_1_BlueDoor
 	FName MakeDoorIdFromButtonId_1_1(const FName& ButtonId) const;
-
-	// 문을 Id로 찾아 열기
 	void OpenDoorById(const FName& DoorId);
 
 private:
-	// 1_1 퍼즐 규칙
 	void HandlePuzzle_1_1(APuzzleColorButton* Button);
 
 private:
-	// 1_2 퍼즐용
+	// 1_2
 	UPROPERTY()
-	TMap<FName, TObjectPtr<APuzzleSignBase>> SignSlotById; 
+	TMap<FName, TObjectPtr<APuzzleSignBase>> SignSlotById;
 
 	UPROPERTY()
-	TMap<FName, TObjectPtr<APuzzleReceiverBox>> ReceiverById; 
+	TMap<FName, TObjectPtr<APuzzleReceiverBox>> ReceiverById;
 
-	// 1_2에서 선택된 정답 3개를 기록(문 열림 조건 체크용)
 	UPROPERTY()
-	TSet<FName> SolvedReceiverIds_1_2; 
+	TSet<FName> SolvedReceiverIds_1_2;
 
-	// 1_2 초기화(랜덤 3개 선택 후 슬롯/리시버 세팅)
-	void InitPuzzle_1_2(); 
+	void InitPuzzle_1_2();
 
-	// 리시버 solved 이벤트 수신
 	UFUNCTION()
-	void OnReceiverSolved(APuzzleReceiverBox* Receiver, bool bSolved); 
+	void OnReceiverSolved(APuzzleReceiverBox* Receiver, bool bSolved);
 
-	// 수집(1_2 전용)
-	void CollectPuzzle12ActorsAndBind(); 
+	void CollectPuzzle12ActorsAndBind();
+
+	//1_2에서도 BlueButton -> BlueDoor 처리(1_1 재활용)
+	void HandlePuzzle_1_2(APuzzleColorButton* Button);
+
+
+private:
+	// 1_3 추가
+	void CollectPuzzle13Actors();
+	void HandlePuzzle_1_3(APuzzleColorButton* Button, bool bPressed);
+
+private:
+	// 1_3에서 움직일 구멍벽
+	UPROPERTY()
+	TObjectPtr<APuzzleMoveHoleWall> MoveHoleWall_1_3 = nullptr;
+
+	// 두 버튼 동시/교차 입력까지 안전하게 상태 기억
+	bool bPressed_L_1_3 = false;
+	bool bPressed_R_1_3 = false;
 };
