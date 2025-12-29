@@ -51,13 +51,16 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipLeftItem(AActor* Item, EEquipmentType NewType);
+	
+	UFUNCTION(Server, Reliable)
+	void ServerTryInteract();
 
 	UFUNCTION(Server, Reliable)
 	void ServerUnequipAllItems();
 
 	void ItemDrop(TObjectPtr<AActor>& ItemSlot);
 
-	void RequestInteractToggle(AActor* CandidateItem);
+	void RequestInteractToggle(AActor* /*CandidateItem*/);
 
 	UFUNCTION(Server, Reliable)
 	void ServerToggleInteract(AActor* CandidateItem);
@@ -67,8 +70,23 @@ public:
 
 	FORCEINLINE EEquipmentType GetEquipmentType() const { return EquipmentType; }
 	FORCEINLINE AActor* GetHeldItemRight() const { return HeldItemRight; }
+	FORCEINLINE AActor* GetHeldItemLeft() const { return HeldItemLeft; }
 
-	
+	UPROPERTY(EditDefaultsOnly, Category = "Input|ItemDrop")
+	float DropHoldSeconds = 1.5f;
+
+	float UsingItemPressedTime = 0.f;
+
+	bool bUsingItemPressed = false;
+
+	UFUNCTION()
+	void UsingItemInputStarted();
+
+	UFUNCTION()
+	void UsingItemInputCompleted();
+
+	UFUNCTION()
+	void UsingItemInputCanceled();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

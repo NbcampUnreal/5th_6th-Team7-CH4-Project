@@ -35,6 +35,9 @@ protected:
 	void OnRep_DisplayId();
 
 public:
+	void ServerSetDisplayId(const FPuzzleId& NewId);
+
+public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// BP에서 모양/머티리얼 
