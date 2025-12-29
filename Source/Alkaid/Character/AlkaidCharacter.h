@@ -82,13 +82,29 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerSetSprinting(bool NewSprinting);
 
+	// Pushing
+
+	UPROPERTY(ReplicatedUsing = OnRep_Pushing)
+	TObjectPtr<AActor> Pushing = nullptr;
+
+	UFUNCTION()
+	void OnRep_Pushing();
+
+	UFUNCTION(Server, Reliable)
+	void ServerStartPushing(AActor* NewBlock);
+
+	UFUNCTION(Server, Reliable)
+	void ServerStopPushing();
+
+	FORCEINLINE bool bIsPushing() const { return Pushing != nullptr; }
+
+	FORCEINLINE AActor* GetPushing() const { return Pushing; }
+
 	//Input
 private:
 	void HandleMoveInput(const FInputActionValue& InValue);
 
 	void HandleLookInput(const FInputActionValue& InValue);
-
-	void HandleUsingItemInput(const FInputActionValue& InValue);
 	
 	void HandleUsingCandleInput(const FInputActionValue& InValue);
 
@@ -103,6 +119,12 @@ private:
 	void StartSprint(const FInputActionValue& Invalue);
 
 	void StopSprint(const FInputActionValue& Invalue);
+
+	void UsingItemInputStarted(const FInputActionValue& Invalue);
+
+	void UsingItemInputCompleted(const FInputActionValue& Invalue);
+
+	void UsingItemInputCanceled(const FInputActionValue& Invalue);
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -151,10 +173,8 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<AActor> CurrentInteractItem = nullptr;
+
 private:
-	
-	UPROPERTY()
-	TObjectPtr<AActor> Pushing;
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> EscWidgetInstance;
