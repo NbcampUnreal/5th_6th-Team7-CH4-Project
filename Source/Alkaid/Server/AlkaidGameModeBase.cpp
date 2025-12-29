@@ -13,6 +13,8 @@ void AAlkaidGameModeBase::ReturnToLobby()
 		return;
 	}
 
+	ResetRoomOnReturn();
+
 	UWorld* World = GetWorld();
 	if (!World)
 	{
@@ -21,13 +23,10 @@ void AAlkaidGameModeBase::ReturnToLobby()
 
 	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
-		APlayerController* PC = It->Get();
-		if (!PC)
+		if (APlayerController* PC = It->Get())
 		{
-			continue;
+			PC->ClientTravel(LobbyMapPath, ETravelType::TRAVEL_Absolute);
 		}
-
-		PC->ClientTravel(LobbyMapPath, ETravelType::TRAVEL_Absolute);
 	}
 }
 
@@ -56,5 +55,29 @@ void AAlkaidGameModeBase::ResetRoomOnReturn()
 		GS->bStartReady = false;
 		GS->RoomPlayerCount = 0;
 		GS->RoomReadyCount = 0;
+	}
+}
+
+void AAlkaidGameModeBase::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+
+	if (!bReloadLevelWhenEmpty)
+	{
+		return;
+	}
+
+	if (bReloadIssued)
+	{
+		return;
+	}
+
+	if (GetNumPlayers() == 0)
+	{
+		bReloadIssued = true;
+
+		ResetRoomOnReturn();
+
+		GetWorld()->ServerTravel(ReloadLevelPath);
 	}
 }
