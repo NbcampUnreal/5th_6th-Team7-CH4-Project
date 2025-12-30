@@ -95,11 +95,22 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerStopPushing();
+	
+	UPROPERTY()
+	float PushingYaw = 0.f;
 
 	FORCEINLINE bool bIsPushing() const { return Pushing != nullptr; }
 
 	FORCEINLINE AActor* GetPushing() const { return Pushing; }
 
+private:
+	void ApplyPushingMovementSetting(bool bEnable);
+
+	UPROPERTY()
+	float LastPushToggleTime = -1000.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Pushing")
+	float PushToggleCooldown = 0.15f;
 	//Input
 private:
 	void HandleMoveInput(const FInputActionValue& InValue);
@@ -125,6 +136,7 @@ private:
 	void UsingItemInputCompleted(const FInputActionValue& Invalue);
 
 	void UsingItemInputCanceled(const FInputActionValue& Invalue);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AlkaidCharacter|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
