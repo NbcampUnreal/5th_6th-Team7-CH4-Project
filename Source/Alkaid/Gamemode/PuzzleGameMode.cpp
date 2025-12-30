@@ -7,6 +7,8 @@
 #include "Gamemode/PuzzleSignBase.h"
 #include "Gamemode/PuzzleReceiverBox.h"
 #include "Gamemode/PuzzleMoveHoleWall.h"
+#include "Gamemode/PuzzleMovePlatform.h"
+#include "Gamemode/PuzzlePressObject.h"
 
 APuzzleGameMode::APuzzleGameMode()
 {
@@ -29,6 +31,19 @@ void APuzzleGameMode::BeginPlay()
 
 	// 1_3 퍼즐 준비
 	CollectPuzzle13Actors();
+
+	// 1_4 퍼즐 준비
+	CollectPuzzle14Actors();
+
+	// 2_ 부터는, 버튼 접촉시 즉발이 아닌 상태머신(and계산)이 생겼으므로 안전처리
+	bPressed_Red_2_1 = false;
+	bPressed_Blue_2_1 = false;
+	bSolved_2_1 = false;
+
+	bPressed_Red_2_2 = false;
+	bPressed_Green_2_2 = false;
+	bPressed_Blue_2_2 = false;
+	bSolved_2_2 = false;
 }
 
 void APuzzleGameMode::CollectActorsAndBind()
@@ -97,6 +112,24 @@ void APuzzleGameMode::OnButtonPressedChanged(APuzzleColorButton* Button, bool bP
 	{
 		// 1_3은 true/false 둘 다 처리해야 함
 		HandlePuzzle_1_3(Button, bPressed);
+		return;
+	}
+
+	if (PuzzleKey == TEXT("1_4"))
+	{
+		HandlePuzzle_1_4(Button, bPressed); // true/false 둘 다 처리
+		return;
+	}
+
+	if (PuzzleKey == TEXT("2_1"))
+	{
+		HandlePuzzle_2_1(Button, bPressed); // true/false 둘 다 처리
+		return;
+	}
+
+	if (PuzzleKey == TEXT("2_2"))
+	{
+		HandlePuzzle_2_2(Button, bPressed); // true/false 둘 다 처리
 		return;
 	}
 }
@@ -168,7 +201,8 @@ void APuzzleGameMode::HandlePuzzle_1_2(APuzzleColorButton* Button)
 	// 1_2에서 BlueButton만 처리 (다른 버튼이 있으면 확장 가능)
 	if (IdStr == TEXT("1_2_BlueButton"))
 	{
-		OpenDoorById(FName(TEXT("1_2_BlueDoor")));
+		const FName DoorId = MakeDoorIdFromButtonId_1_1(Button->ButtonId.Id);
+		OpenDoorById(DoorId);
 	}
 }
 
@@ -332,12 +366,6 @@ void APuzzleGameMode::HandlePuzzle_1_3(APuzzleColorButton* Button, bool bPressed
 		return;
 	}
 
-	if (!IsValid(MoveHoleWall_1_3))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Puzzle 1_3: MoveHoleWall is null."));
-		return;
-	}
-
 	const bool bIsLeft = (IdStr == TEXT("1_3_L_Button"));
 	const bool bIsRight = (IdStr == TEXT("1_3_R_Button"));
 
@@ -365,5 +393,178 @@ void APuzzleGameMode::HandlePuzzle_1_3(APuzzleColorButton* Button, bool bPressed
 	else
 	{
 		MoveHoleWall_1_3->StopMove();
+	}
+}
+
+void APuzzleGameMode::CollectPuzzle14Actors()
+{
+	PlatformById_1_4.Empty();
+	PressedLeftByPad_1_4.Empty();
+	PressedRightByPad_1_4.Empty();
+
+	for (TActorIterator<APuzzleMovePlatform> It(GetWorld()); It; ++It)
+	{
+		APuzzleMovePlatform* Pad = *It;
+		if (!IsValid(Pad)) continue;
+
+		const FName PadId = Pad->PlatformId.Id;
+		if (PadId.IsNone()) continue;
+
+		const FString S = PadId.ToString();
+		if (!S.StartsWith(TEXT("1_4_"))) continue;
+		if (!S.EndsWith(TEXT("_Pad"))) continue;
+
+		PlatformById_1_4.Add(PadId, Pad);
+		PressedLeftByPad_1_4.Add(PadId, false);
+		PressedRightByPad_1_4.Add(PadId, false);
+
+		Pad->StopMove();
+	}
+}
+
+bool APuzzleGameMode::ParseButtonToPad_1_4(const FName& ButtonId, FName& OutPadId, bool& bOutLeft) const
+{
+	const FString S = ButtonId.ToString();
+	TArray<FString> Parts;
+	S.ParseIntoArray(Parts, TEXT("_"), true);
+
+	if (Parts.Num() != 5) return false;
+	if (Parts[0] != TEXT("1")) return false;
+	if (Parts[1] != TEXT("4")) return false;
+
+	const FString& NumToken = Parts[2];     // "1"~"4"
+	const FString& DirToken = Parts[3];     // "L" or "R"
+	const FString& LastToken = Parts[4];    // "Button"
+
+	if (LastToken != TEXT("Button")) return false;
+	if (DirToken != TEXT("L") && DirToken != TEXT("R")) return false;
+
+	bOutLeft = (DirToken == TEXT("L"));
+
+	const FString PadStr = FString::Printf(TEXT("1_4_%s_Pad"), *NumToken);
+	OutPadId = FName(*PadStr);
+	return true;
+}
+
+void APuzzleGameMode::HandlePuzzle_1_4(APuzzleColorButton* Button, bool bPressed)
+{
+	if (!IsValid(Button)) return;
+
+	const FString IdStr = Button->ButtonId.Id.ToString();
+	if (IdStr == TEXT("1_4_RedButton"))
+	{
+		if (bPressed)
+		{
+			OpenDoorById(FName(TEXT("1_4_RedDoor")));
+		}
+		return;
+	}
+
+	FName PadId;
+	bool bLeft = false;
+
+	if (!ParseButtonToPad_1_4(Button->ButtonId.Id, PadId, bLeft))
+	{
+		return;
+	}
+
+	const TObjectPtr<APuzzleMovePlatform>* Found = PlatformById_1_4.Find(PadId);
+	if (!Found) return;
+
+	APuzzleMovePlatform* Pad = Found->Get();
+	if (!IsValid(Pad)) return;
+
+	// 눌림 상태 갱신
+	if (bLeft)  PressedLeftByPad_1_4.FindOrAdd(PadId) = bPressed;
+	else        PressedRightByPad_1_4.FindOrAdd(PadId) = bPressed;
+
+	const bool bL = PressedLeftByPad_1_4.FindRef(PadId);
+	const bool bR = PressedRightByPad_1_4.FindRef(PadId);
+
+	// 한쪽만 눌림 -> 이동, 그 외(둘 다/둘 다 아님) -> 정지
+	if (bL && !bR)      Pad->StartMoveLeft();
+	else if (bR && !bL) Pad->StartMoveRight();
+	else                Pad->StopMove();
+}
+
+void APuzzleGameMode::HandlePuzzle_2_1(APuzzleColorButton* Button, bool bPressed)
+{
+	if (!IsValid(Button)) return;
+
+	// 한 번 열리면 끝(영구 오픈)
+	if (bSolved_2_1) return;
+
+	const FString IdStr = Button->ButtonId.Id.ToString();
+
+	if (IdStr == TEXT("2_1_RedButton"))
+	{
+		bPressed_Red_2_1 = bPressed;
+	}
+	else if (IdStr == TEXT("2_1_BlueButton"))
+	{
+		bPressed_Blue_2_1 = bPressed;
+	}
+	else
+	{
+		return; // 2_1이지만 다른 버튼이면 무시
+	}
+
+	// 둘 다 눌린 상태가 되는 순간 문 오픈(1회)
+	if (bPressed_Red_2_1 && bPressed_Blue_2_1)
+	{
+		bSolved_2_1 = true;
+		OpenDoorById(FName(TEXT("2_1_YellowDoor")));
+	}
+}
+
+void APuzzleGameMode::HandlePuzzle_2_2(APuzzleColorButton* Button, bool bPressed)
+{
+	if (!IsValid(Button)) return;
+
+	// 한 번 열리면 끝(영구 오픈)
+	if (bSolved_2_2) return;
+
+	const FString IdStr = Button->ButtonId.Id.ToString();
+
+	if (IdStr == TEXT("2_2_RedButton"))
+	{
+		bPressed_Red_2_2 = bPressed;
+	}
+	else if (IdStr == TEXT("2_2_GreenButton"))
+	{
+		bPressed_Green_2_2 = bPressed;
+	}
+	else if (IdStr == TEXT("2_2_BlueButton"))
+	{
+		bPressed_Blue_2_2 = bPressed;
+	}
+	else
+	{
+		return; // 2_2이지만 다른 버튼이면 무시
+	}
+
+	// 3개 모두 눌린 순간 오픈(1회)
+	if (bPressed_Red_2_2 && bPressed_Green_2_2 && bPressed_Blue_2_2)
+	{
+		bSolved_2_2 = true;
+		OpenDoorById(FName(TEXT("2_2_YellowDoor")));
+
+		DestroyPressObjectsForPuzzle(FName(TEXT("2_2")));
+	}
+}
+
+void APuzzleGameMode::DestroyPressObjectsForPuzzle(const FName& PuzzleKey)
+{
+	if (!HasAuthority()) return;
+
+	for (TActorIterator<APuzzlePressObject> It(GetWorld()); It; ++It)
+	{
+		APuzzlePressObject* Obj = *It;
+		if (!IsValid(Obj)) continue;
+
+		if (Obj->OwnerPuzzleId.Id == PuzzleKey)
+		{
+			Obj->Destroy();
+		}
 	}
 }
