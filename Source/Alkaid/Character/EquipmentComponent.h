@@ -79,6 +79,7 @@ public:
 
 	bool bUsingItemPressed = false;
 
+
 	UFUNCTION()
 	void UsingItemInputStarted();
 
@@ -87,6 +88,9 @@ public:
 
 	UFUNCTION()
 	void UsingItemInputCanceled();
+
+	FORCEINLINE FName GetLeftHandSocketName() const { return LeftHandSocket; }
+	FORCEINLINE FName GetRightHandSocketName() const { return RightHandSocket; }
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

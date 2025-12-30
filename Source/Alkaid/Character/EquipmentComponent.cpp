@@ -141,13 +141,22 @@ if (Candidate)
 		}
 		if (NewType == EEquipmentType::Block)
 		{
-			if (!OwnerAC)
+			UE_LOG(LogTemp, Warning, TEXT("[Equip] Block interact. Candidate=%s"), *GetNameSafe(Candidate));
+
+			if (OwnerAC->bIsPushing())
+			{
+				OwnerAC->ServerStopPushing();
 				return;
+			}
 
 			if (HeldItemRight || HeldItemLeft)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[Equip] Block interact blocked: hands occupied. R=%s L=%s"),
+					*GetNameSafe(HeldItemRight), *GetNameSafe(HeldItemLeft));
 				return;
-
+			}
 			OwnerAC->ServerStartPushing(Candidate);
+			UE_LOG(LogTemp, Warning, TEXT("[Equip] Sent ServerStartPushing"));
 			return;
 		}
 		// 그 외는 한손(오른손) 정책
@@ -265,35 +274,29 @@ void UEquipmentComponent::UsingItemInputStarted()
 
 void UEquipmentComponent::UsingItemInputCompleted()
 {
-	if (!bUsingItemPressed)
-		return;
-
+	if (!bUsingItemPressed) return;
 	bUsingItemPressed = false;
+
+	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
+	if (!OwnerAC) return;
 
 	const float HeldFor = GetWorld()->GetTimeSeconds() - UsingItemPressedTime;
 
-	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
-
-	if (!OwnerAC)
-		return;
-
-	if (HeldFor >= DropHoldSeconds)
-	{
-		if (OwnerAC->bIsPushing())
-		{
-			OwnerAC->ServerStopPushing();
-			return;
-		}
-		ServerDropItem();
-		return;
-	}
-
-	if(OwnerAC->bIsPushing())
+	// 1) 푸시 중이면: 길게/짧게 상관없이 "Stop" 우선
+	if (OwnerAC->bIsPushing())
 	{
 		OwnerAC->ServerStopPushing();
 		return;
 	}
 
+	// 2) 길게 누르면: 들고있는 아이템 드랍
+	if (HeldFor >= DropHoldSeconds)
+	{
+		ServerDropItem();
+		return;
+	}
+
+	// 3) 짧게 누르면: 상호작용(줍기)
 	RequestInteractToggle(nullptr);
 }
 
