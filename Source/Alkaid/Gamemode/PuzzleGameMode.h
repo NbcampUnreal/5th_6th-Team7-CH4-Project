@@ -12,6 +12,8 @@ class APuzzleColorDoor;
 class APuzzleSignBase;
 class APuzzleReceiverBox;
 class APuzzleMoveHoleWall;
+class APuzzleMovePlatform;
+class APuzzlePressObject;
 
 UCLASS()
 class ALKAID_API APuzzleGameMode : public AAlkaidGameModeBase
@@ -71,7 +73,7 @@ private:
 
 
 private:
-	// 1_3 추가
+	// 1_3
 	void CollectPuzzle13Actors();
 	void HandlePuzzle_1_3(APuzzleColorButton* Button, bool bPressed);
 
@@ -83,4 +85,43 @@ private:
 	// 두 버튼 동시/교차 입력까지 안전하게 상태 기억
 	bool bPressed_L_1_3 = false;
 	bool bPressed_R_1_3 = false;
+
+private:
+	// 1_4 플랫폼: "1_4_1_Pad" -> Actor
+	UPROPERTY()
+	TMap<FName, TObjectPtr<APuzzleMovePlatform>> PlatformById_1_4;
+
+	// 플랫폼별 버튼 눌림 상태 기억
+	UPROPERTY()
+	TMap<FName, bool> PressedLeftByPad_1_4;
+
+	UPROPERTY()
+	TMap<FName, bool> PressedRightByPad_1_4;
+
+	void CollectPuzzle14Actors();
+	void HandlePuzzle_1_4(APuzzleColorButton* Button, bool bPressed);
+
+	// 1_4_3_L_Button -> PadId = 1_4_3_Pad, bLeft=true
+	bool ParseButtonToPad_1_4(const FName& ButtonId, FName& OutPadId, bool& bOutLeft) const;
+
+private:
+	// 2_1
+	void HandlePuzzle_2_1(APuzzleColorButton* Button, bool bPressed);
+
+	bool bPressed_Red_2_1 = false;
+	bool bPressed_Blue_2_1 = false;
+	bool bSolved_2_1 = false;
+
+private:
+	// 2_2
+	void HandlePuzzle_2_2(APuzzleColorButton* Button, bool bPressed);
+
+	bool bPressed_Red_2_2 = false;
+	bool bPressed_Green_2_2 = false;
+	bool bPressed_Blue_2_2 = false;
+	bool bSolved_2_2 = false;
+
+private:
+	// 2_2 성공 시 전용 오브젝트 정리
+	void DestroyPressObjectsForPuzzle(const FName& PuzzleKey);
 };
