@@ -456,7 +456,12 @@ void AAlkaidCharacter::ServerStartPushing_Implementation(AActor* NewBlock)
 
 	Pushing = NewBlock;
 
-	PushingYaw = NewBlock->GetActorRotation().Yaw;
+	const FVector ToBlock = NewBlock->GetActorLocation() - GetActorLocation();
+	const FVector ToBlock2D(ToBlock.X, ToBlock.Y, 0.f);
+
+	PushingYaw = ToBlock2D.IsNearlyZero()
+		? (Controller ? Controller->GetControlRotation().Yaw : GetActorRotation().Yaw)
+		: ToBlock2D.Rotation().Yaw;
 
 	if(UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(NewBlock->GetRootComponent()))
 	{
@@ -467,7 +472,14 @@ void AAlkaidCharacter::ServerStartPushing_Implementation(AActor* NewBlock)
 
 	const FName SocketName = EquipmentComponent->GetRightHandSocketName();
 
-	NewBlock->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
+	NewBlock->AttachToComponent(
+		MeshComp,
+		FAttachmentTransformRules::KeepWorldTransform,
+		SocketName
+	);
+
+	NewBlock->SetActorLocation(GetActorLocation() + GetActorForwardVector() * 80.f + FVector(0, 0, 40.f));
+	NewBlock->SetActorRotation(FRotator(0.f, PushingYaw, 0.f));
 
 	ApplyPushingMovementSetting(true);
 
