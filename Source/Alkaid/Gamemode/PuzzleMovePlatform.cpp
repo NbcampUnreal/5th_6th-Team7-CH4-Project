@@ -5,7 +5,9 @@
 APuzzleMovePlatform::APuzzleMovePlatform()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
 	bReplicates = true;
+	SetReplicateMovement(true);
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(Root);
