@@ -13,7 +13,7 @@ UEquipmentComponent::UEquipmentComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
-	
+
 }
 
 void UEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -38,7 +38,7 @@ void UEquipmentComponent::OnRep_HeldItems()
 
 void UEquipmentComponent::ServerEquipRightItem_Implementation(AActor* Item, EEquipmentType NewType)
 {
-	if(!Item)
+	if (!Item)
 		return;
 
 	if (HeldItemRight)
@@ -53,15 +53,15 @@ void UEquipmentComponent::ServerEquipRightItem_Implementation(AActor* Item, EEqu
 
 void UEquipmentComponent::ServerEquipLeftItem_Implementation(AActor* Item, EEquipmentType NewType)
 {
-	if(!Item)
+	if (!Item)
 		return;
-	if(HeldItemLeft)
-		{
-			HeldItemLeft->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			ApplyHeldVisual(HeldItemLeft, false);
-			DropActorToFront(HeldItemLeft);
-			HeldItemLeft = nullptr;
-		}
+	if (HeldItemLeft)
+	{
+		HeldItemLeft->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		ApplyHeldVisual(HeldItemLeft, false);
+		DropActorToFront(HeldItemLeft);
+		HeldItemLeft = nullptr;
+	}
 	HeldItemLeft = Item;
 	EquipmentType = NewType;
 	ApplyHeldVisual(HeldItemLeft, true);
@@ -70,14 +70,14 @@ void UEquipmentComponent::ServerEquipLeftItem_Implementation(AActor* Item, EEqui
 
 void UEquipmentComponent::ServerUnequipAllItems_Implementation()
 {
-	if(HeldItemLeft)
+	if (HeldItemLeft)
 	{
 		HeldItemLeft->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		ApplyHeldVisual(HeldItemLeft, false);
 		DropActorToFront(HeldItemLeft);
 		HeldItemLeft = nullptr;
 	}
-	if(HeldItemRight)
+	if (HeldItemRight)
 	{
 		HeldItemRight->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		ApplyHeldVisual(HeldItemRight, false);
@@ -91,7 +91,7 @@ void UEquipmentComponent::ServerUnequipAllItems_Implementation()
 void UEquipmentComponent::ServerTryInteract_Implementation()
 {
 	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
-	if(!OwnerAC)
+	if (!OwnerAC)
 		return;
 
 	UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] Called. Owner=%s Role=%d HasAuth=%d"),
@@ -106,7 +106,7 @@ void UEquipmentComponent::ServerTryInteract_Implementation()
 
 	const float TraceRadius = 30.0f;
 
-const bool bHit = GetWorld()->SweepSingleByChannel(
+	const bool bHit = GetWorld()->SweepSingleByChannel(
 		Hit,
 		Start,
 		End,
@@ -114,71 +114,71 @@ const bool bHit = GetWorld()->SweepSingleByChannel(
 		ECC_GameTraceChannel1,
 		FCollisionShape::MakeSphere(TraceRadius),
 		Params
-);
-UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] Start=%s End=%s"),
-	*Start.ToString(), *End.ToString());
+	);
+	UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] Start=%s End=%s"),
+		*Start.ToString(), *End.ToString());
 
-UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] bHit=%d HitActor=%s HitComp=%s"),
-	bHit,
-	*GetNameSafe(Hit.GetActor()),
-	*GetNameSafe(Hit.GetComponent()));
+	UE_LOG(LogTemp, Warning, TEXT("[ServerTryInteract] bHit=%d HitActor=%s HitComp=%s"),
+		bHit,
+		*GetNameSafe(Hit.GetActor()),
+		*GetNameSafe(Hit.GetComponent()));
 
-AActor* Candidate = bHit ? Hit.GetActor() : nullptr;
+	AActor* Candidate = bHit ? Hit.GetActor() : nullptr;
 
-// 1) 맞은게 있고, 줍기 가능한 타입이면 -> 줍기
-if (Candidate)
-{
-	const EEquipmentType NewType = DetermineEquipmentType(Candidate);
-	if (NewType != EEquipmentType::None)
+	// 1) 맞은게 있고, 줍기 가능한 타입이면 -> 줍기
+	if (Candidate)
 	{
-		// 퍼즐이면 빈 손에 넣기(양손 운반)
-		if (NewType == EEquipmentType::Puzzle)
+		const EEquipmentType NewType = DetermineEquipmentType(Candidate);
+		if (NewType != EEquipmentType::None)
 		{
-			if (!HeldItemRight) { ServerEquipRightItem(Candidate, NewType); return; }
-			if (!HeldItemLeft) { ServerEquipLeftItem(Candidate, NewType);  return; }
-			// 두 손 다 차 있으면 아무 것도 안 함
-			return;
-		}
-		if (NewType == EEquipmentType::Block)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[Equip] Block interact. Candidate=%s"), *GetNameSafe(Candidate));
-
-			if (OwnerAC->bIsPushing())
+			// 퍼즐이면 빈 손에 넣기(양손 운반)
+			if (NewType == EEquipmentType::Puzzle)
 			{
-				OwnerAC->ServerStopPushing();
+				if (!HeldItemRight) { ServerEquipRightItem(Candidate, NewType); return; }
+				if (!HeldItemLeft) { ServerEquipLeftItem(Candidate, NewType);  return; }
+				// 두 손 다 차 있으면 아무 것도 안 함
 				return;
 			}
-
-			if (HeldItemRight || HeldItemLeft)
+			if (NewType == EEquipmentType::Block)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[Equip] Block interact blocked: hands occupied. R=%s L=%s"),
-					*GetNameSafe(HeldItemRight), *GetNameSafe(HeldItemLeft));
+				UE_LOG(LogTemp, Warning, TEXT("[Equip] Block interact. Candidate=%s"), *GetNameSafe(Candidate));
+
+				if (OwnerAC->bIsPushing())
+				{
+					OwnerAC->ServerStopPushing();
+					return;
+				}
+
+				if (HeldItemRight || HeldItemLeft)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("[Equip] Block interact blocked: hands occupied. R=%s L=%s"),
+						*GetNameSafe(HeldItemRight), *GetNameSafe(HeldItemLeft));
+					return;
+				}
+				OwnerAC->ServerStartPushing(Candidate);
+				UE_LOG(LogTemp, Warning, TEXT("[Equip] Sent ServerStartPushing"));
 				return;
 			}
-			OwnerAC->ServerStartPushing(Candidate);
-			UE_LOG(LogTemp, Warning, TEXT("[Equip] Sent ServerStartPushing"));
+			// 그 외는 한손(오른손) 정책
+			if (HeldItemRight || HeldItemLeft) ServerDropItem();
+			ServerEquipRightItem(Candidate, NewType);
 			return;
 		}
-		// 그 외는 한손(오른손) 정책
-		if (HeldItemRight || HeldItemLeft) ServerDropItem();
-		ServerEquipRightItem(Candidate, NewType);
-		return;
 	}
-}
 
-DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.0f, 0, 1.0f);
-DrawDebugSphere(GetWorld(), Start, TraceRadius, 12, FColor::Red, false, 3.0f);
-DrawDebugSphere(GetWorld(), End, TraceRadius, 12, FColor::Red, false, 3.0f);
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.0f, 0, 1.0f);
+	DrawDebugSphere(GetWorld(), Start, TraceRadius, 12, FColor::Red, false, 3.0f);
+	DrawDebugSphere(GetWorld(), End, TraceRadius, 12, FColor::Red, false, 3.0f);
 
-if (bHit)
-{
-	DrawDebugSphere(GetWorld(), Hit.Location, TraceRadius, 12, FColor::Green, false, 3.0f);
-}
+	if (bHit)
+	{
+		DrawDebugSphere(GetWorld(), Hit.Location, TraceRadius, 12, FColor::Green, false, 3.0f);
+	}
 }
 
 void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 {
-	if(!ItemSlot)
+	if (!ItemSlot)
 		return;
 
 	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
@@ -194,7 +194,7 @@ void UEquipmentComponent::ItemDrop(TObjectPtr<AActor>& ItemSlot)
 
 	Item->SetActorLocation(DropLocation);
 
-	if(UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Item->GetRootComponent()))
+	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Item->GetRootComponent()))
 	{
 		PrimComp->SetSimulatePhysics(true);
 		PrimComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -211,18 +211,18 @@ void UEquipmentComponent::RequestInteractToggle(AActor*)
 
 	if (!GetOwner()->HasAuthority())
 	{
-		
+
 		ServerTryInteract();
 		return;
 	}
 
-	
+
 	ServerTryInteract();
 }
 
 void UEquipmentComponent::ServerDropItem_Implementation()
 {
-	if(HeldItemRight)
+	if (HeldItemRight)
 	{
 		ItemDrop(HeldItemRight);
 		if (!HeldItemRight) EquipmentType = EEquipmentType::None;
@@ -247,17 +247,17 @@ void UEquipmentComponent::ServerToggleInteract_Implementation(AActor* CandidateI
 		return;
 	}
 
-	if(HeldItemLeft)
+	if (HeldItemLeft)
 	{
 		ServerDropItem();
 		return;
 	}
 
-	if(!CandidateItem)
+	if (!CandidateItem)
 		return;
 
 	const EEquipmentType NewType = DetermineEquipmentType(CandidateItem);
-	if(NewType == EEquipmentType::None)
+	if (NewType == EEquipmentType::None)
 		return;
 
 	ServerEquipRightItem(CandidateItem, NewType);
@@ -317,11 +317,11 @@ void UEquipmentComponent::BeginPlay()
 void UEquipmentComponent::ApplyAttach()
 {
 	AAlkaidCharacter* OwnerAC = GetOwnerCharacter();
-	if(!OwnerAC) 
+	if (!OwnerAC)
 		return;
 
 	USkeletalMeshComponent* MeshComp = OwnerAC->GetMesh();
-	if(!MeshComp)
+	if (!MeshComp)
 		return;
 
 	if (HeldItemRight)
@@ -331,6 +331,13 @@ void UEquipmentComponent::ApplyAttach()
 			FAttachmentTransformRules::SnapToTargetIncludingScale,
 			RightHandSocket
 		);
+		UStaticMeshComponent* ItemMesh= HeldItemRight->FindComponentByClass<UStaticMeshComponent>();
+
+		if (ItemMesh != nullptr)
+		{
+			ItemMesh->SetSimulatePhysics(false);
+			ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
 	}
 
 	if (HeldItemLeft)
@@ -389,7 +396,7 @@ EEquipmentType UEquipmentComponent::DetermineEquipmentType(AActor* Item) const
 		*Item->GetName(), *Item->GetClass()->GetName());
 
 
-	for(const auto& Pair : ItemClassToEquipmentType)
+	for (const auto& Pair : ItemClassToEquipmentType)
 	{
 		if (Pair.Key)
 		{
@@ -397,7 +404,7 @@ EEquipmentType UEquipmentComponent::DetermineEquipmentType(AActor* Item) const
 				*Pair.Key->GetName(), Item->IsA(Pair.Key));
 		}
 
-		if (Pair.Key &&Item->IsA(Pair.Key))
+		if (Pair.Key && Item->IsA(Pair.Key))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("  => MATCH Type=%d"), (int32)Pair.Value);
 			return Pair.Value;
