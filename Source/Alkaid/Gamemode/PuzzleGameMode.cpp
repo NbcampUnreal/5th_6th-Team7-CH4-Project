@@ -9,6 +9,7 @@
 #include "Gamemode/PuzzleMoveHoleWall.h"
 #include "Gamemode/PuzzleMovePlatform.h"
 #include "Gamemode/PuzzlePressObject.h"
+#include "Gamemode/PuzzleBlockableDoor.h"
 
 APuzzleGameMode::APuzzleGameMode()
 {
@@ -44,6 +45,9 @@ void APuzzleGameMode::BeginPlay()
 	bPressed_Green_2_2 = false;
 	bPressed_Blue_2_2 = false;
 	bSolved_2_2 = false;
+
+	// 2_3 퍼즐준비 수집호출
+	CollectPuzzle23Doors();
 }
 
 void APuzzleGameMode::CollectActorsAndBind()
@@ -130,6 +134,22 @@ void APuzzleGameMode::OnButtonPressedChanged(APuzzleColorButton* Button, bool bP
 	if (PuzzleKey == TEXT("2_2"))
 	{
 		HandlePuzzle_2_2(Button, bPressed); // true/false 둘 다 처리
+		return;
+	}
+
+	if (PuzzleKey == TEXT("2_3"))
+	{
+		const FString IdStr = Button->ButtonId.Id.ToString();
+
+		// 확인방(빨강/파랑) 처리 우선 
+		if (IdStr == TEXT("2_3_RedButton") || IdStr == TEXT("2_3_BlueButton")) //추가
+		{
+			HandlePuzzle_2_3_Check(Button, bPressed);
+		}
+		else
+		{
+			HandlePuzzle_2_3(Button, bPressed);
+		}
 		return;
 	}
 }
@@ -566,5 +586,73 @@ void APuzzleGameMode::DestroyPressObjectsForPuzzle(const FName& PuzzleKey)
 		{
 			Obj->Destroy();
 		}
+	}
+}
+
+void APuzzleGameMode::CollectPuzzle23Doors()
+{
+	BlockableDoorById.Empty();
+
+	for (TActorIterator<APuzzleBlockableDoor> It(GetWorld()); It; ++It)
+	{
+		APuzzleBlockableDoor* Door = *It;
+		if (!IsValid(Door)) continue;
+
+		const FName Did = Door->DoorId.Id;
+		if (Did.IsNone()) continue;
+
+		BlockableDoorById.Add(Did, Door);
+	}
+}
+
+void APuzzleGameMode::HandlePuzzle_2_3(APuzzleColorButton* Button, bool bPressed)
+{
+	if (!IsValid(Button)) return;
+
+	const FString IdStr = Button->ButtonId.Id.ToString();
+
+	if (IdStr != TEXT("2_3_GreenButton"))
+	{
+		return;
+	}
+
+	const TObjectPtr<APuzzleBlockableDoor>* Found = BlockableDoorById.Find(FName(TEXT("2_3_YellowDoor")));
+	if (!Found) return;
+
+	APuzzleBlockableDoor* Door = Found->Get();
+	if (!IsValid(Door)) return;
+
+	// 누르는 동안 열기 유지, 떼면 닫힘(하지만 물체가 있으면 막혀서 중간에 멈춤)
+	Door->SetActive(bPressed);
+}
+
+void APuzzleGameMode::HandlePuzzle_2_3_Check(APuzzleColorButton* Button, bool bPressed)
+{
+	if (!IsValid(Button)) return;
+
+	// 한 번 열리면 끝(영구 오픈)
+	if (bSolved_2_3_Check) return;
+
+	const FString IdStr = Button->ButtonId.Id.ToString();
+
+	if (IdStr == TEXT("2_3_RedButton"))
+	{
+		bPressed_Red_2_3_Check = bPressed;
+	}
+	else if (IdStr == TEXT("2_3_BlueButton"))
+	{
+		bPressed_Blue_2_3_Check = bPressed;
+	}
+	else
+	{
+		// 2_3 이지만 확인방 버튼이 아니면 무시
+		return;
+	}
+
+	// 둘 다 눌린 순간 1회 오픈
+	if (bPressed_Red_2_3_Check && bPressed_Blue_2_3_Check)
+	{
+		bSolved_2_3_Check = true;
+		OpenDoorById(FName(TEXT("2_3_2_YellowDoor")));
 	}
 }
