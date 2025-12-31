@@ -107,6 +107,11 @@ void APuzzleBlockableDoor::ServerStepMove(float DeltaSeconds)
 	// 막혔으면(닫히는 중이고 Hit 발생) 오프셋을 "실제 패널 위치"로 재계산하고 더 닫지 않음
 	if (bClosing && (HitL.bBlockingHit || HitR.bBlockingHit))
 	{
+		if (HitL.GetActor() && HitR.GetActor() != nullptr)
+		{
+			HitL.GetActor()->ForceNetUpdate();
+			HitR.GetActor()->ForceNetUpdate();
+		}
 		CurrentOffset = CalcOffsetFromPanels();
 		// bActive는 이미 false일 텐데, 닫힘은 물체가 빠질 때까지 진행 못 하므로 여기서 멈춤
 		return;
