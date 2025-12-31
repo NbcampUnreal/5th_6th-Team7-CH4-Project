@@ -14,6 +14,7 @@ class APuzzleReceiverBox;
 class APuzzleMoveHoleWall;
 class APuzzleMovePlatform;
 class APuzzlePressObject;
+class APuzzleBlockableDoor;
 
 UCLASS()
 class ALKAID_API APuzzleGameMode : public AAlkaidGameModeBase
@@ -124,4 +125,20 @@ private:
 private:
 	// 2_2 성공 시 전용 오브젝트 정리
 	void DestroyPressObjectsForPuzzle(const FName& PuzzleKey);
+
+private:
+	// 2_3
+	UPROPERTY()
+	TMap<FName, TObjectPtr<APuzzleBlockableDoor>> BlockableDoorById;
+
+	void CollectPuzzle23Doors();
+	void HandlePuzzle_2_3(APuzzleColorButton* Button, bool bPressed);
+
+private:
+	// 2_3 확인방(뒤쪽 노랑문 오픈)
+	void HandlePuzzle_2_3_Check(APuzzleColorButton* Button, bool bPressed);
+
+	bool bPressed_Red_2_3_Check = false;
+	bool bPressed_Blue_2_3_Check = false;
+	bool bSolved_2_3_Check = false;
 };
