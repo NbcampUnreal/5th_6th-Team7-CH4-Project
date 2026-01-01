@@ -73,7 +73,7 @@ public:
 	FORCEINLINE AActor* GetHeldItemLeft() const { return HeldItemLeft; }
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input|ItemDrop")
-	float DropHoldSeconds = 1.5f;
+	float DropHoldSeconds = 1.0f;
 
 	float UsingItemPressedTime = 0.f;
 

@@ -111,7 +111,7 @@ void UEquipmentComponent::ServerTryInteract_Implementation()
 		Start,
 		End,
 		FQuat::Identity,
-		ECC_GameTraceChannel1,
+		ECC_Visibility,
 		FCollisionShape::MakeSphere(TraceRadius),
 		Params
 	);
