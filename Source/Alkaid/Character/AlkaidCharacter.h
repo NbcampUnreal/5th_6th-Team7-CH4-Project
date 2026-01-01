@@ -111,6 +111,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Pushing")
 	float PushToggleCooldown = 0.15f;
+
+	UPROPERTY(EditAnywhere, Category = "Stamina")
+	float SprintStaminaCost = -6.0;
+
+	UPROPERTY(EditAnywhere, Category = "Stamina")
+	float EquipmentStaminaCost = -2.0;
 	//Input
 private:
 	void HandleMoveInput(const FInputActionValue& InValue);

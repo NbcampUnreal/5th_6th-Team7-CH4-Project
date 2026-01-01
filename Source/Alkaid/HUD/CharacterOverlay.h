@@ -14,10 +14,10 @@ class ALKAID_API UCharacterOverlay : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
 	class UProgressBar* StaminaBar;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
 	class UTextBlock* StaminaText;
 
 	UPROPERTY(meta = (BindWidget))

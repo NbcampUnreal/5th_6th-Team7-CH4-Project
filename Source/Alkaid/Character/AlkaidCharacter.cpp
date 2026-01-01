@@ -509,7 +509,7 @@ void AAlkaidCharacter::Tick(float DeltaTime)
 		const bool bIsMoving = Speed2D > 3.0f;
 		if (bIsMoving)
 		{
-			StatComponent->AddStamina(-6 * DeltaTime);
+			StatComponent->AddStamina(SprintStaminaCost * DeltaTime);
 			if (StatComponent->GetStamina() <= 0.0f)
 			{
 				ServerSetSprinting(false);
@@ -525,7 +525,7 @@ void AAlkaidCharacter::Tick(float DeltaTime)
 
 		if (bCarryingPuzzle)
 		{
-			StatComponent->AddStamina(-2 * DeltaTime);
+			StatComponent->AddStamina(EquipmentStaminaCost * DeltaTime);
 
 			if (StatComponent->GetStamina() <= 0.0f)
 			{
@@ -537,7 +537,7 @@ void AAlkaidCharacter::Tick(float DeltaTime)
 
 	if(Pushing)
 	{
-		StatComponent->AddStamina(-2 * DeltaTime);
+		StatComponent->AddStamina(EquipmentStaminaCost * DeltaTime);
 
 		if (StatComponent->GetStamina() <= 0.0f)
 		{
