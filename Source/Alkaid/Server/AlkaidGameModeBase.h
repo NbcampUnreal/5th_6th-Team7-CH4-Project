@@ -27,7 +27,7 @@ protected:
 	bool bReloadLevelWhenEmpty = false;
 
 	UPROPERTY(EditDefaultsOnly)
-	FString ReloadLevelPath = TEXT("/Game/Map/proto_map");
+	FString ReloadLevelPath = TEXT("/Game/Map/Puzzle_map");
 
 	bool bReloadIssued = false;
 
