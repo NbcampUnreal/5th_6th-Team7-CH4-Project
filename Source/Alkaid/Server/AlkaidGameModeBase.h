@@ -12,10 +12,10 @@ class ALKAID_API AAlkaidGameModeBase : public AGameModeBase
 public:
 	//입장 맵.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Travel")
-	FString LobbyMapPath = TEXT("125.183.170.242:7777"/*"/Game/UI/UIMap/lobby"*/);
+	FString LobbyMapPath = TEXT("125.183.170.242:7777");
 	//퍼즐 맵.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Travel")
-	FString PuzzleMapPath = TEXT("125.183.170.242:7778"/*"/Game/Map/proto_map"*/);
+	FString PuzzleMapPath = TEXT("125.183.170.242:7778");
 	//로비로 복귀.
 	UFUNCTION(BlueprintCallable)
 	void ReturnToLobby();
@@ -32,4 +32,10 @@ protected:
 	bool bReloadIssued = false;
 
 	virtual void Logout(AController* Exiting) override;
+
+private:
+	FTimerHandle ReloadCheckTimer;
+
+	UFUNCTION()
+	void TryReloadIfEmpty();
 };

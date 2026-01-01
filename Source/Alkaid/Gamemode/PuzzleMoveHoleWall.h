@@ -21,14 +21,14 @@ public:
 
 	// Y 이동 범위
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Puzzle|Wall")
-	float MinY = -1250.f;
+	float MinY = -1450.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Puzzle|Wall")
-	float MaxY = -350.f;
+	float MaxY = -580.f;
 
 	// 이동 속도(uu/s)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Puzzle|Wall")
-	float MoveSpeed = 250.f;
+	float MoveSpeed = 300.f;
 
 	// -1: MinY 방향, +1: MaxY 방향, 0: 정지
 	UPROPERTY(ReplicatedUsing = OnRep_MoveDir, BlueprintReadOnly, Category = "Puzzle|Wall")

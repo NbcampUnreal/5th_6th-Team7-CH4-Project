@@ -25,7 +25,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
-	// Y ¿Ãµø π¸¿ß
+	// Y Ïù¥Îèô Î≤îÏúÑ
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Puzzle|Platform")
 	float MinY = 750.f;
 
@@ -35,7 +35,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Puzzle|Platform")
 	float MoveSpeed = 250.f;
 
-	// -1: MinY πÊ«‚, +1: MaxY πÊ«‚, 0: ¡§¡ˆ
+	// -1: MinY Î∞©Ìñ•, +1: MaxY Î∞©Ìñ•, 0: Ï†ïÏßÄ
 	UPROPERTY(BlueprintReadOnly, Category = "Puzzle|Platform")
 	int32 MoveDir = 0;
 
