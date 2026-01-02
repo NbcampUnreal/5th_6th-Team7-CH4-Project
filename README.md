@@ -152,7 +152,18 @@
 
 ---
 
-## 6. 개발 환경(예시)
+## 6. 개발 환경
 - Engine: Unreal Engine 5
 - Network: Dedicated Server 기반 멀티플레이
 - Players: 2인 협동
+
+
+---
+
+## 로컬 테스트 (Local)
+로컬 환경에서 테스트 시 `LobbyMapPath`, `PuzzleMapPath`는 **맵 에셋 경로가 아니라 접속용 Travel URL(Host:Port)** 로 사용했습니다.
+
+- LobbyMapPath = "127.0.0.1:7777"
+- PuzzleMapPath = "127.0.0.1:7778"
+
+> 참고: 127.0.0.1은 같은 PC에서만 유효합니다. 다른 PC에서 접속 테스트 시에는 서버 PC의 IP로 변경해야 합니다.
