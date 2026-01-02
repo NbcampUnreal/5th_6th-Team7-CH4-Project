@@ -148,11 +148,7 @@
 ---
 
 ## 5. 영상(데모)
-- README에는 링크만 추가하면 깔끔합니다.
-
-예시)
-- 🎥 데모 영상: (YouTube/Drive 링크)
-- 🎮 플레이 영상: (YouTube/Drive 링크)
+- https://youtu.be/IT8bSqwMC9U?si=ZwlHkbmh5dG7_p4g
 
 ---
 
